@@ -24,6 +24,7 @@ To do so, go to [your Spotify for Developers Dashboard](https://beta.developer.s
 
 Create the "spotify-data.js" file in the root folder and fill in your data:
 
+```JavaScript
 var clientId = '1234567890abcdefghijkl1234567890';
 var clientSecret = '1234567890abcdefghijkl1234567890';
 var redirectUri = '1234567890abcdefghijkl1234567890';
@@ -31,8 +32,9 @@ var redirectUri = '1234567890abcdefghijkl1234567890';
 exports.clientId = clientId;
 exports.clientSecret = clientSecret;
 exports.redirectUri = redirectUri;
+```
 
-## Running the app
+#### Running the app
 In order to run the app, open the web folder, and run its "app.js" file.
 
     $ cd web
