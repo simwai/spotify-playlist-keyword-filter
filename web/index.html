@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Example of the Authorization Code flow with Spotify</title>
+    <title>Spotify Playlist Keyword Filter</title>
     <!-- includes -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="http://code.jquery.com/jquery-3.3.1.js"></script>
@@ -52,6 +52,9 @@
         </div>
     </div>
     <script>
+    var access_token;
+    var uid;
+
     function getHashParams() {
         var hashParams = {};
         var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -73,9 +76,13 @@
 
         var access_token = params.access_token,
             refresh_token = params.refresh_token,
+            uid = params.uid,
             error = params.error;
 
+        console.log("uid" + uid);
+
         if (error) {
+
             alert('There was an error during the authentication');
         } else {
             if (access_token) {
@@ -84,7 +91,7 @@
                     headers: {
                         'Authorization': 'Bearer ' + access_token
                     },
-                    success: function(response) {
+                    success: function(r) {
                         $('#login').hide();
                         $('#loggedin').show();
                     }
@@ -99,11 +106,10 @@
 
     var counter = 0;
     counter++;
-    console.log("javascript" + counter);
+    console.log("javascript " + counter);
 
     login()
-    </script>
-    <script>
+
     function info(msg) {
         $("#info").text(msg);
     }
@@ -112,7 +118,7 @@
         info(msg);
     }
 
-    function fetchPlaylists(uid, callback) {
+    function fetchPlaylists(uid) {
         $("#playlist-list tbody").empty();
         info("Getting your playlists");
         var url = 'https://api.spotify.com/v1/users/' + uid + '/playlists';
@@ -120,21 +126,23 @@
             limit: 50,
             offset: 0
         }
-        getSpotify(url, data, callback);
+        getSpotify(url, data);
     }
 
-    function getSpotify(url, data, callback) {
+    fetchPlaylists();
+
+    function getSpotify(url, data) {
         $.ajax(url, {
             dataType: 'json',
             data: data,
             headers: {
-                'Authorization': 'Bearer ' + accessToken
+                'Authorization': 'Bearer ' + access_token
             },
             success: function(r) {
-                callback(r);
+                console.log(r);
             },
             error: function(r) {
-                callback(null);
+                console.log(r);
             }
         });
     }
