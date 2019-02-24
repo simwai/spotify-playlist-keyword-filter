@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -12,6 +12,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <style type="text/css">
+    @media (max-width: 991px) {
+        .container {
+            max-width: 98%;
+        }
+
+        h1 {
+            font-size: 60px !important;
+        }
+
+        th {
+            font-size: 35px !important;
+        }
+
+        td {
+            font-size: 35px !important;
+        }
+    }
+
+    h1,
+    th {
+        font-weight: 500;
+    }
+
+    h1 {
+        font-size: 2rem !important;
+        padding-left: 12px;
+        line-height: 36px;
+    }
+
+    th {
+        font-size: 1.5rem !important;
+    }
+
+    td {
+        font-size: 1rem !important;
+        font-weight: normal !important;
+    }
+
     #login,
     #loggedin {
         display: none;
@@ -34,15 +72,14 @@
         </div>
         <div id="loggedin" class="top jumbotron">
             <p id='info' class="text-center"></p>
-            <div class="worker" id='playlists'>
-                <h2 class="prompt" > Pick a playlist: </h2>
+            <div id='playlists'>
+                <h1 class="prompt"> Pick a playlist: </h1>
                 <div class="panel panel-default">
                     <table id='playlist-list' class="table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Track Count</th>
-                                <th>Owner</th>
                             </tr>
                         </thead>
                         <tbody> </tbody>
@@ -54,6 +91,7 @@
     <script>
     var access_token;
     var uid;
+    var logged_in = false;
 
     function getHashParams() {
         var hashParams = {};
@@ -62,7 +100,7 @@
         while (e = r.exec(q)) {
             hashParams[e[1]] = decodeURIComponent(e[2]);
         }
-        console.log(hashParams);
+
         return hashParams;
     }
 
@@ -74,15 +112,13 @@
 
         var params = getHashParams();
 
-        var access_token = params.access_token,
-            refresh_token = params.refresh_token,
+        access_token = params.access_token
+
+        var refresh_token = params.refresh_token,
             uid = params.uid,
             error = params.error;
 
-        console.log("uid" + uid);
-
         if (error) {
-
             alert('There was an error during the authentication');
         } else {
             if (access_token) {
@@ -92,23 +128,21 @@
                         'Authorization': 'Bearer ' + access_token
                     },
                     success: function(r) {
+                        logged_in = true;
                         $('#login').hide();
                         $('#loggedin').show();
+
+                        fetchPlaylists();
                     }
                 });
             } else {
                 // render initial screen
+                logged_in = false;
                 $('#login').show();
                 $('#loggedin').hide();
             }
         }
     }
-
-    var counter = 0;
-    counter++;
-    console.log("javascript " + counter);
-
-    login()
 
     function info(msg) {
         $("#info").text(msg);
@@ -121,15 +155,15 @@
     function fetchPlaylists(uid) {
         $("#playlist-list tbody").empty();
         info("Getting your playlists");
+
         var url = 'https://api.spotify.com/v1/users/' + uid + '/playlists';
         var data = {
             limit: 50,
             offset: 0
         }
+
         getSpotify(url, data);
     }
-
-    fetchPlaylists();
 
     function getSpotify(url, data) {
         $.ajax(url, {
@@ -140,12 +174,22 @@
             },
             success: function(r) {
                 console.log(r);
+                $.each(r.items, function(index, val) {
+                    console.log(val.name);
+                    $("#playlist-list").find("tbody").append("<tr><td>" + val.name + "</td><td>" + val.tracks.total + "</td></tr>");
+                });
+
+                info("");
             },
             error: function(r) {
                 console.log(r);
             }
         });
     }
+
+    $(document).ready(function() {
+        login();
+    });
     </script>
 </body>
 

@@ -96,23 +96,22 @@ app.get('/callback', function(req, res) {
                     headers: { 'Authorization': 'Bearer ' + access_token },
                     json: true
                 };
-                
-                
+
+
                 // use the access token to access the Spotify Web API
-                var uid;
                 request.get(options, function(error, response, body) {
                     console.log("body: " + util.inspect(body, false, null, true));
-                    uid = body.id;                    
-                });
-                console.log("server.uid" + uid);
+                    uid = body.id;
+                    console.log(body.id);
 
-                // we can also pass the token to the browser to make requests from there
-                res.redirect('/#' +
-                    querystring.stringify({
-                        access_token: access_token,
-                        refresh_token: refresh_token,
-                        uid: uid
-                    }));
+                    // we can also pass the token to the browser to make requests from there
+                    res.redirect('/#' +
+                        querystring.stringify({
+                            access_token: access_token,
+                            refresh_token: refresh_token,
+                            uid: uid
+                        }));
+                });
             } else {
                 res.redirect('/#' +
                     querystring.stringify({
