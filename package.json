@@ -20,7 +20,7 @@
     "spotify"
   ],
   "author": "Simon Waiblinger",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/simwai/spotify-playlist-keyword-filter/issues"
   },

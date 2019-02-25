@@ -1,6 +1,6 @@
 # Spotify Playlist Keyword Filter
 
-A web application to filter keywords from Spotify playlists.
+A web application to filter out songs from Spotify playlists based on keywords.
 
 Money, Bitch, Smoking etc. All these words are in most of the current songs. If you want to have a clean playlist with none of such words, start using Spotify Playlist Keyword Filter. Maybe you have an addiction or little respect for women then listening to selected music can be benefiting.
 
