@@ -1,16 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Spotify Playlist Keyword Filter</title>
-    <!-- includes -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="http://code.jquery.com/jquery-3.3.1.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.13.5/dist/bootstrap-table.min.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
     <style type="text/css">
     @media (max-width: 991px) {
         .container {
@@ -18,7 +19,7 @@
         }
 
         h1 {
-            font-size: 60px !important;
+            font-size: 50px !important;
         }
 
         th {
@@ -36,18 +37,18 @@
     }
 
     h1 {
-        font-size: 2rem !important;
+        font-size: 2rem;
         padding-left: 12px;
         line-height: 36px;
     }
 
     th {
-        font-size: 1.5rem !important;
+        font-size: 1.5rem;
     }
 
     td {
-        font-size: 1rem !important;
-        font-weight: normal !important;
+        font-size: 1rem;
+        font-weight: normal;
     }
 
     #login,
@@ -71,13 +72,17 @@
             <a href="/login" class="btn btn-primary">Log in with Spotify</a>
         </div>
         <div id="loggedin" class="top jumbotron">
-            <p id='info' class="text-center"></p>
-            <div id='playlists'>
-                <h1 class="prompt"> Pick a playlist: </h1>
-                <div class="panel panel-default">
-                    <table id='playlist-list' class="table">
+            <p id="info" class="text-center"></p>
+            <div id="playlists">
+                <h1> Pick a playlist: </h1>
+                <br>
+                <div>
+                    <!-- <table id="playlist-list" data-toggle="table"> -->
+                        <table id="playlist-list" class="table">
                         <thead>
                             <tr>
+                                <!-- <th data-sortable="true">Name</th>
+                                <th data-sortable="true">Track Count</th> -->
                                 <th>Name</th>
                                 <th>Track Count</th>
                             </tr>
@@ -90,6 +95,7 @@
     </div>
     <script>
     var access_token;
+    var refresh_token;
     var uid;
     var logged_in = false;
 
@@ -111,37 +117,53 @@
          */
 
         var params = getHashParams();
-
         access_token = params.access_token
-
-        var refresh_token = params.refresh_token,
+        refresh_token = params.refresh_token,
             uid = params.uid,
             error = params.error;
 
         if (error) {
-            alert('There was an error during the authentication');
+            alert("There was an error during the authentication");
         } else {
             if (access_token) {
                 $.ajax({
-                    url: 'https://api.spotify.com/v1/me',
+                    url: "https://api.spotify.com/v1/me",
                     headers: {
-                        'Authorization': 'Bearer ' + access_token
+                        "Authorization": "Bearer " + access_token
                     },
                     success: function(r) {
                         logged_in = true;
-                        $('#login').hide();
-                        $('#loggedin').show();
+                        $("#login").hide();
+                        $("#loggedin").show();
 
                         fetchPlaylists();
+                    },
+                    error: function(r) {
+                        console.log("invalid access token");
+                        refreshToken();
                     }
                 });
             } else {
                 // render initial screen
                 logged_in = false;
-                $('#login').show();
-                $('#loggedin').hide();
+                $("#login").show();
+                $("#loggedin").hide();
             }
         }
+    }
+
+    function refreshToken() {
+        $.ajax({
+            url: "/refresh_token",
+            data: { refresh_token: refresh_token },
+            success: function(r) {
+                console.log("refreshed token");
+            },
+            error: function(r) {
+                console.log("token refresh failed");
+                console.log(JSON.stringify(r));
+            }
+        });
     }
 
     function info(msg) {
@@ -156,34 +178,38 @@
         $("#playlist-list tbody").empty();
         info("Getting your playlists");
 
-        var url = 'https://api.spotify.com/v1/users/' + uid + '/playlists';
+        var url = "https://api.spotify.com/v1/users/" + uid + "/playlists";
         var data = {
             limit: 50,
             offset: 0
         }
 
-        getSpotify(url, data);
+        getSpotify(url, data).then(r =>
+            $.each(r.items, function(index, val) {
+                console.log(val.name);
+                $("#playlist-list").find("tbody").append("<tr><td>" + val.name + "</td><td>" + val.tracks.total + "</td></tr>");
+            })
+        ).catch(error => window.location("/#error=" + error));
     }
 
     function getSpotify(url, data) {
-        $.ajax(url, {
-            dataType: 'json',
-            data: data,
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            },
-            success: function(r) {
-                console.log(r);
-                $.each(r.items, function(index, val) {
-                    console.log(val.name);
-                    $("#playlist-list").find("tbody").append("<tr><td>" + val.name + "</td><td>" + val.tracks.total + "</td></tr>");
-                });
-
-                info("");
-            },
-            error: function(r) {
-                console.log(r);
-            }
+        return new Promise((resolve, reject) => {
+            $.ajax(url, {
+                dataType: "json",
+                data: data,
+                headers: {
+                    "Authorization": "Bearer " + access_token
+                },
+                success: function(r) {
+                    console.log(r);
+                    info("");
+                    resolve(r);
+                },
+                error: function(r) {
+                    console.log("get spotify error: " + r);
+                    reject("playlist_fetching");
+                }
+            });
         });
     }
 

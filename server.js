@@ -1,12 +1,3 @@
-/**
- * This is an example of a basic node.js script that performs
- * the Authorization Code oAuth2 flow to authenticate against
- * the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
- */
-
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
 var cors = require('cors');
@@ -16,12 +7,17 @@ var util = require('util')
 
 var spotifyData = require('./spotify-data');
 
+var stateKey = 'spotify_auth_state';
+var app = express();
+
+var uid;
+
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-var generateRandomString = function(length) {
+function generateRandomString(length) {
     var text = '';
     var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -30,10 +26,6 @@ var generateRandomString = function(length) {
     }
     return text;
 };
-
-var stateKey = 'spotify_auth_state';
-
-var app = express();
 
 app.use(express.static(__dirname + '/web'))
     .use(cors())
@@ -81,22 +73,21 @@ app.get('/callback', function(req, res) {
                 grant_type: 'authorization_code'
             },
             headers: {
-                'Authorization': 'Basic ' + (new Buffer(spotifyData.clientId + ':' + spotifyData.clientSecret).toString('base64'))
+                'Authorization': 'Basic ' + (Buffer.from(spotifyData.clientId + ':' + spotifyData.clientSecret).toString('base64'))
             },
             json: true
         };
 
         request.post(authOptions, function(error, response, body) {
             if (!error && response.statusCode === 200) {
-                var access_token = body.access_token,
-                    refresh_token = body.refresh_token;
+                var access_token = body.access_token;
+                var refresh_token = body.refresh_token;
 
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
                     headers: { 'Authorization': 'Bearer ' + access_token },
                     json: true
                 };
-
 
                 // use the access token to access the Spotify Web API
                 request.get(options, function(error, response, body) {
@@ -123,12 +114,13 @@ app.get('/callback', function(req, res) {
 });
 
 app.get('/refresh_token', function(req, res) {
-
-    // requesting access token from refresh token
+    console.log("refresh token triggered");
+    console.log("reg" + util.inspect(req.query, false, null, true));
+    console.log("res" + util.inspect(res.query, false, null, true));
     var refresh_token = req.query.refresh_token;
     var authOptions = {
         url: 'https://accounts.spotify.com/api/token',
-        headers: { 'Authorization': 'Basic ' + (new Buffer(spotifyData.clientId + ':' + spotifyData.clientSecret).toString('base64')) },
+        headers: { 'Authorization': 'Basic ' + (Buffer.from(spotifyData.clientId + ':' + spotifyData.clientSecret).toString('base64')) },
         form: {
             grant_type: 'refresh_token',
             refresh_token: refresh_token
@@ -137,13 +129,28 @@ app.get('/refresh_token', function(req, res) {
     };
 
     request.post(authOptions, function(error, response, body) {
+        console.log("error: " + util.inspect(error, false, null, true));
+        console.log("body" + util.inspect(body, false, null, true, body));
+        console.log("refresh_token" + refresh_token);
+        console.log("request pre triggered");
         if (!error && response.statusCode === 200) {
+            console.log("request triggered");
             var access_token = body.access_token;
+
+            /* only to avoid delay on website
             res.send({
                 'access_token': access_token
             });
+            */
+            res.redirect('/#' +
+                querystring.stringify({
+                    access_token: access_token,
+                    refresh_token: refresh_token,
+                    uid: uid
+                }));
         }
     });
+    console.log("request after triggered");
 });
 
 console.log('Listening on 8888');
