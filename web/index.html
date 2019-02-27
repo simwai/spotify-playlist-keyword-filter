@@ -8,77 +8,167 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.13.5/dist/bootstrap-table.min.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
     <style type="text/css">
     @media (max-width: 991px) {
         .container {
-            max-width: 98%;
-        }
-
-        h1 {
-            font-size: 50px !important;
-        }
-
-        th {
-            font-size: 35px !important;
-        }
-
-        td {
-            font-size: 35px !important;
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: 0;
+            margin-right: 0;
+            max-width: 100%;
         }
     }
 
-    h1,
+    body {
+        font-size: 1.2em;
+    }
+
     th {
         font-weight: 500;
-    }
-
-    h1 {
-        font-size: 2rem;
-        padding-left: 12px;
-        line-height: 36px;
-    }
-
-    th {
         font-size: 1.5rem;
     }
 
     td {
-        font-size: 1rem;
+        font-size: 1.2rem;
         font-weight: normal;
     }
 
-    #login,
-    #loggedin {
+
+    h1 {
+        font-size: 2.2rem;
+        line-height: 2.4rem;
+    }
+
+    a {
+        color: #17a2b8;
+    }
+
+    #login: {
+        display: block;
+    }
+
+    #logged-in {
         display: none;
     }
 
-    .text-overflow {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        width: 500px;
+    #login,
+    #logged-in {
+        display: none;
+        margin-bottom: 0;
+    }
+
+    #tag-form {
+        margin-left: .35em;
+    }
+
+    #tags {
+        margin-top: 1.2em;
+    }
+
+    #tag-input {
+        display: inline-block !important;
+        width: auto !important;
+    }
+
+    .tag {
+        font-size: 1rem;
+        padding: .3em .5em .5em;
+        margin-right: .5em;
+        margin-bottom: .7em;
+        color: white;
+        display: inline-block;
+    }
+
+    .tag a {
+        cursor: pointer;
+        opacity: 0.6;
+        margin: 0 0 0 .3em;
+    }
+
+    .tag a:hover {
+        opacity: 1.0
+    }
+
+    .btn,
+    .tag {
+        border-radius: 1.2em;
+    }
+
+    #start-button {
+        display: none;
+    }
+
+
+    #add-button {
+        margin-left: 0.5em;
+    }
+
+    #navbar-logo {
+        display: inline-block;
+        width: 1.7em;
+        height: 1.7em;
+        background-image: url("data:image/svg+xml,%3Csvg enable-background='new 0 0 32 32' version='1.1' viewBox='0 0 32 32' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cg id='Style_2_copy_3'%3E%3Cg%3E%3Cg%3E%3Cpath d='M16,31.625c-8.615,0-15.625-7.01-15.625-15.625C0.375,7.384,7.385,0.375,16,0.375S31.625,7.384,31.625,16 C31.625,24.615,24.615,31.625,16,31.625z' fill='%23FFFFFF'/%3E%3Cpath d='M16,0.75c8.409,0,15.25,6.841,15.25,15.25S24.409,31.25,16,31.25S0.75,24.409,0.75,16S7.591,0.75,16,0.75 M16,0C7.163,0,0,7.163,0,16c0,8.836,7.163,16,16,16s16-7.164,16-16C32,7.163,24.837,0,16,0L16,0z' fill='%23E5E5E5'/%3E%3C/g%3E%3C/g%3E%3Cg%3E%3Cpath d='M14.063,9.289c-1.232-0.03-2.594,0.065-3.951,0.274c-0.958,0.143-1.91,0.321-2.826,0.637 c-0.696,0.238-1.047,0.994-0.815,1.66c0.244,0.702,0.964,1.065,1.672,0.851c1.755-0.524,3.564-0.714,5.385-0.779 c1.19-0.042,2.374,0.036,3.552,0.161c1.44,0.149,2.856,0.422,4.242,0.833c1.178,0.351,2.303,0.827,3.374,1.434 c0.619,0.351,1.303,0.214,1.726-0.315c0.428-0.541,0.399-1.208-0.077-1.731c-0.173-0.196-0.411-0.309-0.637-0.434 c-1.351-0.744-2.779-1.285-4.266-1.678C19.079,9.563,16.663,9.259,14.063,9.289z M13.956,14.18 c-0.494,0.012-0.94,0.024-1.386,0.048c-1.488,0.071-2.939,0.333-4.367,0.756c-0.643,0.19-0.958,0.779-0.768,1.416 c0.167,0.559,0.774,0.875,1.38,0.714c0.208-0.054,0.417-0.131,0.631-0.179c2.368-0.583,4.766-0.66,7.176-0.327 c2.279,0.309,4.439,0.976,6.414,2.172c0.589,0.357,1.238,0.095,1.511-0.339c0.345-0.541,0.179-1.238-0.375-1.577 c-0.702-0.434-1.434-0.809-2.19-1.119C19.388,14.686,16.693,14.192,13.956,14.18z M13.379,18.857 c-0.446,0.018-0.893,0.042-1.333,0.083c-1.136,0.095-2.255,0.292-3.368,0.547c-0.512,0.119-0.797,0.583-0.69,1.047 c0.113,0.5,0.547,0.774,1.083,0.672c0.292-0.054,0.583-0.113,0.875-0.173c1.19-0.256,2.404-0.369,3.618-0.417 c0.791-0.03,1.583,0.018,2.368,0.101c1.369,0.143,2.684,0.47,3.951,1c0.613,0.256,1.184,0.589,1.773,0.898 c0.422,0.22,0.946,0.06,1.16-0.339c0.244-0.452,0.113-0.946-0.321-1.208c-0.69-0.422-1.416-0.774-2.172-1.083 C18.097,19.065,15.765,18.791,13.379,18.857z' fill='%23333333'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        vertical-align: middle;
+    }
+
+    #navbar {
+        color: white;
+    }
+
+    #navbar:hover,
+    #navbar:visited,
+    #navbar:link,
+    #navbar:active {
+        text-decoration: none;
+    }
+
+    .navbar {
+        padding: 1.2rem;
+        text-decoration: none;
+        font-size: 1.3rem;
+        line-height: 1.5rem;
+    }
+
+    #navbar-title {
+        vertical-align: middle;
+        margin-left: 0.5em;
+    }
+
+    #footer {
+        display: none;
+        background-color: #e9ecef;
+        border-top: .07em solid black;
+        padding: 1.2em .6em 1.2em .6em;
+        margin: auto;
+        width: inherit;
     }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div id="login">
-            <h1>Spotify Playlist Keyword Filter</h1>
-            <a href="/login" class="btn btn-primary">Log in with Spotify</a>
-        </div>
-        <div id="loggedin" class="top jumbotron">
-            <p id="info" class="text-center"></p>
-            <div id="playlists">
-                <h1> Pick a playlist: </h1>
+        <nav id="header" class="navbar navbar-dark navbar-fixed-top bg-dark">
+            <a id="navbar" class="text-center" href="index.html">
+                <div id="navbar-logo"></div>
+                <span id="navbar-title">Spotify Playlist Keyword Filter</span>
+            </a>
+        </nav>
+        <div id="content">
+            <div id="login" class="jumbotron text-center">
+                <h1>Spotify Playlist Keyword Filter</h1>
+                <p>Filter your Spotify playlists now!</p>
                 <br>
-                <div>
-                    <!-- <table id="playlist-list" data-toggle="table"> -->
-                        <table id="playlist-list" class="table">
+                <a href="/login" class="btn btn-info">Log in with Spotify</a>
+            </div>
+            <div id="logged-in" class="jumbotron">
+                <p id="info" class="text-center"></p>
+                <div id="playlist-form">
+                    <h1 id="playlist-title" class="text-center">Pick a playlist:</h1>
+                    <br>
+                    <table id="playlists" class="table">
                         <thead>
                             <tr>
                                 <!-- <th data-sortable="true">Name</th>
@@ -90,14 +180,43 @@
                         <tbody> </tbody>
                     </table>
                 </div>
+                <div id="tag-form" class="text-center">
+                    <h1>Declare some keywords:</h1>
+                    <br>
+                    <input type="text" id="tag-input" class="form-control" /><button type="button" id="add-button" class="btn btn-secondary">Add</button>
+                    <br>
+                    <div id="tags"></div>
+                    <br>
+                    <button type="button" id="start-button" class="btn btn-info">Start Filtering</button>
+                </div>
+            </div>
+        </div>
+        <!--
+        <div id="footer" class="row text-center">
+            <span>Made with ♥ by simwai 👨‍💻 · Check out the code on </span>
+            <a href="https://github.com/simwai/spotify-playlist-keyword-filter/">GitHub</a>
+            <span> 📃 · Support the project buying a coffee ☕</span>
+        </div>
+        -->
+        <div id="footer" class="row">
+            <div class="col-sm">
+                <span>Made with ♥ by simwai 👨‍💻</span>
+            </div>
+            <div class="col-sm">
+                <span>Check out the code on </span>
+                <a href="https://github.com/simwai/spotify-playlist-keyword-filter/">GitHub</a>
+                <span> 📃</span>
+            </div>
+            <div class="col-sm">
+                <span>Support the project buying a coffee ☕</span>
             </div>
         </div>
     </div>
     <script>
     var access_token;
-    var refresh_token;
     var uid;
-    var logged_in = false;
+    var selectedPlaylist;
+    var loggedIn = false;
 
     function getHashParams() {
         var hashParams = {};
@@ -117,42 +236,63 @@
          */
 
         var params = getHashParams();
-        access_token = params.access_token
-        refresh_token = params.refresh_token,
-            uid = params.uid,
-            error = params.error;
+        access_token = params.access_token;
+        var refresh_token = params.refresh_token;
+        uid = params.uid;
+        // var error = params.error;
 
-        if (error) {
-            alert("There was an error during the authentication");
+        if (access_token) {
+            $.ajax({
+                url: "https://api.spotify.com/v1/me",
+                headers: {
+                    "Authorization": "Bearer " + access_token
+                },
+                success: function(r) {
+                    loggedIn = true;
+                    navigationHandler(true, false);
+
+                    fetchPlaylists();
+                },
+                error: function(r) {
+                    error("invalid_access_token");
+                    refreshToken();
+                }
+            });
         } else {
-            if (access_token) {
-                $.ajax({
-                    url: "https://api.spotify.com/v1/me",
-                    headers: {
-                        "Authorization": "Bearer " + access_token
-                    },
-                    success: function(r) {
-                        logged_in = true;
-                        $("#login").hide();
-                        $("#loggedin").show();
-
-                        fetchPlaylists();
-                    },
-                    error: function(r) {
-                        console.log("invalid access token");
-                        refreshToken();
-                    }
-                });
-            } else {
-                // render initial screen
-                logged_in = false;
-                $("#login").show();
-                $("#loggedin").hide();
-            }
+            loggedIn = false;
+            // render initial screen
+            navigationHandler(false, false);
         }
     }
 
+    function navigationHandler(playlistForm, tagForm) {
+        $("#login").hide();
+        $("#logged-in").hide();
+        $("#playlist-form").hide();
+        $("#tag-form").hide();
+
+        if (!loggedIn) {
+            $("#login").show();
+        } else {
+            $("#logged-in").show();
+
+            if (playlistForm) {
+                $("#playlist-form").show();
+            }
+
+            if (tagForm) {
+                $("#tag-form").show();
+            }
+        }
+
+        if ($("#footer").css("display") == "none") {
+            $("#footer").css("display", "inline-flex");
+        }
+    }
+
+
     function refreshToken() {
+        /*
         $.ajax({
             url: "/refresh_token",
             data: { refresh_token: refresh_token },
@@ -164,19 +304,17 @@
                 console.log(JSON.stringify(r));
             }
         });
-    }
-
-    function info(msg) {
-        $("#info").text(msg);
+        */
+        window.location = "/refresh_token";
     }
 
     function error(msg) {
-        info(msg);
+        window.location = "/#error=" + msg;
     }
 
     function fetchPlaylists(uid) {
-        $("#playlist-list tbody").empty();
-        info("Getting your playlists");
+        $("#playlists tbody").empty();
+        // info("Getting your playlists");
 
         var url = "https://api.spotify.com/v1/users/" + uid + "/playlists";
         var data = {
@@ -185,11 +323,17 @@
         }
 
         getSpotify(url, data).then(r =>
-            $.each(r.items, function(index, val) {
-                console.log(val.name);
-                $("#playlist-list").find("tbody").append("<tr><td>" + val.name + "</td><td>" + val.tracks.total + "</td></tr>");
-            })
-        ).catch(error => window.location("/#error=" + error));
+            displayPlaylist(r.items)
+        ).catch(error => error("playlist_fetching"));
+    }
+
+    function displayPlaylist(items) {
+        $.each(items, function(index, val) {
+            console.log(val.name);
+            var counter = 0;
+            $("#playlists").find("tbody").append("<tr><td><a id='playlist-" + counter + "' href='#'>" + val.name + "</a></td><td>" + val.tracks.total + "</td></tr>");
+            counter++;
+        })
     }
 
     function getSpotify(url, data) {
@@ -202,12 +346,12 @@
                 },
                 success: function(r) {
                     console.log(r);
-                    info("");
+                    // info("");
                     resolve(r);
                 },
                 error: function(r) {
-                    console.log("get spotify error: " + r);
-                    reject("playlist_fetching");
+                    error("get_spotify");
+                    reject("get_spotify");
                 }
             });
         });
@@ -215,6 +359,45 @@
 
     $(document).ready(function() {
         login();
+
+        // create tag on enter keyup event
+        var idCounter = 0;
+        var tagAmountCounter = 0;
+        $(document).keyup(function(event) {
+            if ($("#tag-input").is(":focus") && event.key == "Enter" && idCounter <= 20) {
+                if (idCounter == 0) {
+                    $("#start-button").show();
+                }
+
+                var tagInput = $("#tag-input").val();
+                $("#tags").append("<span id='tag-" + idCounter + "'' class='tag bg-dark'>" + tagInput + "<a><i id='tag-remove-" + idCounter + "'class='fa fa-times remove'></i></a></span>");
+                idCounter++;
+                tagAmountCounter++;
+            }
+        });
+
+        // remove tag on click event
+        $("#tags").on("click", function(event) {
+            var id = event.target.id.match(/\d+/);
+
+            if (id) {
+                $("#tags").find("#tag-" + id[0]).remove();
+                tagAmountCounter--;
+
+                if (tagAmountcounter == 0) {
+                    $("#start-button").hide();
+                }
+            }
+        });
+
+        $("#playlists").on("click", function(event) {
+            selectedPlaylist = event.target.id.match(/\d+/);
+
+            if (selectedPlaylist) {
+                console.log(selectedPlaylist[0]);
+                navigationHandler(false, true);
+            }
+        });
     });
     </script>
 </body>
