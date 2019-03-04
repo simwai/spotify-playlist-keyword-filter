@@ -11,6 +11,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+    <script src="./lyrics-fetcher.js"></script>
     <style type="text/css">
     @media (max-width: 993px) {
         .container {
@@ -225,11 +226,11 @@
     var access_token;
     var loggedIn = false;
 
+    var uid;
     var selectedPlaylistId;
     var idCounter = 0;
     var tagAmountCounter = 0;
     var tags = [];
-    var playlists = [];
 
     function getHashParams() {
         var hashParams = {};
@@ -251,7 +252,7 @@
         var params = getHashParams();
         access_token = params.access_token;
         var refresh_token = params.refresh_token;
-        var uid = params.uid;
+        uid = params.uid;
         // var error = params.error;
 
         if (access_token) {
@@ -265,7 +266,11 @@
                     navigationHandler(true, false);
 
                     // how can i move this to the js start?
-                    fetchPlaylists(uid);
+
+                    var playlists = (async function() {
+                        var playlists = await fetchPlaylists(uid);
+                        renderPlaylists(playlists);
+                    })();                    
                 },
                 error: function(r) {
                     error("invalid_access_token");
@@ -333,32 +338,15 @@
             offset: 0
         }
 
+        var playlists = await getSpotifySets(url, data);
+
         var playlistCounter = 0;
         var playlistSetLength = 0;
-        do {
-            /*            
-            getSpotify(url, data).then(r => function(r) {
-                playlists.push(r.playlists);
-            }).catch(error => function(error) {
-                error("playlist_fetching");
-            });
-            */
 
-            var response = await getSpotify(url, data);
-            var playlistSet = response.items;
-            playlists.push(playlistSet);
-
-            var playlistSetLength = playlistSet.length;
-
-            playlistCounter += 50;
-            data.offset += 50;
-        } while (playlistCounter < 500 && playlistSetLength > 49);
-
-        // how can i move this to the js start?
-        renderPlaylists(playlists);
+        return playlists;
     }
 
-    function renderPlaylists() {
+    function renderPlaylists(playlists) {
         $("#playlists tbody").empty();
 
         var counter = 0;
@@ -392,32 +380,25 @@
         console.log(access_token);
     }
 
-    function createTag() {
-        var tagInput = $("#tag-input").val();
+    async function getSpotifySets(url, data) {
+        var counter = 0;
+        var items = [];
+        var increase = data.limit;
 
-        if (tagInput && !tags.includes(tagInput)) {
+        do {
+            var response = await getSpotify(url, data);
+            console.log(response);
 
-            if (idCounter < 20) {
-                if (idCounter == 0) {
-                    $("#start-button").show();
-                }
+            var set = response.items;
+            items.push(set);
 
-                $("#tags").append("<span id='tag-" + idCounter + "'' class='tag bg-dark'>" + tagInput + "<a><i id='tag-remove-" + idCounter + "'class='fa fa-times remove'></i></a></span>");
-                tags.push(tagInput);
-                idCounter++;
-                tagAmountCounter++;
-            }
-        }
-    }
+            var setLength = items.length;
 
-    function removeTag(id) {
-        $("#tags").find("#tag-" + id).remove();
-        tags.splice(tags.indexOf(id), 1);
-        tagAmountCounter--;
+            counter += increase;
+            data.offset += increase;
+        } while (counter < 5000 && items.length > 99);
 
-        if (tagAmountCounter == 0) {
-            $("#start-button").hide();
-        }
+        return items;
     }
 
     /*
@@ -448,33 +429,50 @@
         */
 
     async function fetchTracks() {
-        var url = "https://api.spotify.com/v1/playlists/" + selectedPlaylistSpotifyId + "/tracks";
+        var url = "https://api.spotify.com/v1/users/" + uid + "/playlists/" + selectedPlaylistSpotifyId + "/tracks";
         var data = {
             limit: 100,
             offset: 0,
-            fields: items(track, artists(external_ids(isrc)))
+            fields: "items(track(external_ids(isrc)))"
         }
 
-        var counter = 0;
-        var setLength = 0;
-        do {
-            var response = await getSpotify(url, data);
-            console.log(response);
+        var tracks = await getSpotifySets(url, data);
+        console.log("tracks: " + JSON.stringify(tracks));
 
-            /*
-            var set = response.items;
-            tracks.push(playlistSet);
-
-            var setLength = playlistSet.length;
-            */
-
-            counter += 100;
-            data.offset += 100;
-        } while (counter < 5000 && setLength > 99);
+        return tracks
     }
 
+
     function startFiltering() {
-        // var tracks = fetchTracks();
+        var tracks = fetchTracks();
+    }
+
+    function createTag() {
+        var tagInput = $("#tag-input").val();
+
+        if (tagInput && !tags.includes(tagInput)) {
+
+            if (idCounter < 20) {
+                if (idCounter == 0) {
+                    $("#start-button").show();
+                }
+
+                $("#tags").append("<span id='tag-" + idCounter + "'' class='tag bg-dark'>" + tagInput + "<a><i id='tag-remove-" + idCounter + "'class='fa fa-times remove'></i></a></span>");
+                tags.push(tagInput);
+                idCounter++;
+                tagAmountCounter++;
+            }
+        }
+    }
+
+    function removeTag(id) {
+        $("#tags").find("#tag-" + id).remove();
+        tags.splice(tags.indexOf(id), 1);
+        tagAmountCounter--;
+
+        if (tagAmountCounter == 0) {
+            $("#start-button").hide();
+        }
     }
 
     $(document).ready(function() {
@@ -508,6 +506,9 @@
 
         $("#start-button").on("click", function(event) { startFiltering(); });
     });
+
+    // TODO: better seperate functions (calls)
+    //       remove unnecessary global vars
     </script>
 </body>
 
