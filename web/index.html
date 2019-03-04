@@ -11,7 +11,6 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
-    <script src="./lyrics-fetcher.js"></script>
     <style type="text/css">
     @media (max-width: 993px) {
         .container {
@@ -163,6 +162,16 @@
         margin: auto;
         width: inherit;
     }
+
+    #footer-text-left {
+        margin: auto;
+        margin-right: 2rem;
+    }
+
+    #footer-text-right {
+        margin-left: 2rem;
+        margin-right: auto;
+    }
     </style>
 </head>
 
@@ -208,18 +217,9 @@
                 </div>
             </div>
         </div>
-        <div id="footer" class="row">
-            <div class="col-sm">
-                <span>Made with ♥ by simwai 👨‍💻</span>
-            </div>
-            <div class="col-sm text-center">
-                <span>Check out the code on </span>
-                <a href="https://github.com/simwai/spotify-playlist-keyword-filter/">GitHub</a>
-                <span> 📃</span>
-            </div>
-            <div class="col-sm">
-                <span>Support the project buying a coffee ☕</span>
-            </div>
+        <div id="footer">
+            <span id="footer-text-left">Made with ♥ by simwai 👨‍</span>
+            <span id="footer-text-right">💻 Check out the code on <a href="https://github.com/simwai/spotify-playlist-keyword-filter/">GitHub</a> 📃</span>
         </div>
     </div>
     <script>
@@ -270,7 +270,7 @@
                     var playlists = (async function() {
                         var playlists = await fetchPlaylists(uid);
                         renderPlaylists(playlists);
-                    })();                    
+                    })();
                 },
                 error: function(r) {
                     error("invalid_access_token");
@@ -433,7 +433,8 @@
         var data = {
             limit: 100,
             offset: 0,
-            fields: "items(track(external_ids(isrc)))"
+            // fields: "items(track(external_ids(isrc)))"
+            fields: "items(track(name, artists(name)))"
         }
 
         var tracks = await getSpotifySets(url, data);
@@ -442,9 +443,68 @@
         return tracks
     }
 
+    function getAZLyrics(url) {
+        return new Promise((resolve, reject) => {
+            $.get(url, {
+                dataType: "html",
+                success: function(r) {
+                    console.log(r);
+                    resolve(r);
+                },
+                error: function(r) {
+                    error("get_azlyrics");
+                    reject("get_azlyrics");
+                }
+            });
+        });
+    }
+
+    async function fetchLyrics(artist, song) {
+        if (artist.includes(" ")) {
+            artist = artist.replace(" ", "");
+        }
+
+        if (artist.includes("$")) {
+            artist = artist.replace("$", "S");
+        }
+
+        if (song.includes(" ")) {
+            song = song.replace(" ", "");
+        }
+
+        console.log(song);
+        console.log(artist);
+
+        var url = "https://www.azlyrics.com/lyrics/" + artist + "/" + song + ".html";
+        var htmlObj = await getAZLyrics(url);
+
+
+
+        lyrics = "";
+
+        return lyrics;
+    }
+
+    async function fetchAllLyrics(tracks) {
+        var lyrics = [];
+
+        $.each(tracks, function(index, val) {
+            var artist = val.track.artists.name;
+            var song = val.track.name;
+
+            (async function() {
+                var lyrics = await fetchLyrics(artist, song);
+                this.lyrics.push(lyrics);
+                console.log(this.lyrics);
+            })();
+        });
+
+        return lyrics;
+    }
 
     function startFiltering() {
         var tracks = fetchTracks();
+        var lyrics = fetchAllLyrics(tracks);
     }
 
     function createTag() {
