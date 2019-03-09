@@ -39,6 +39,15 @@ app.use(express.static(__dirname + "/web"))
     .use(cors())
     .use(cookieParser());
 
+// CORS proxy  
+app.get('/proxy/*', function(req, res) {
+    var urlPart = req.url.substring(6, req.url.length);
+    var url = "https://www.azlyrics.com" + urlPart;
+    console.log("substring: " + url);
+    req.pipe(request(url)).pipe(res);
+});
+
+
 app.get("/login", function(req, res) {
 
     var state = generateRandomString(16);
@@ -111,7 +120,7 @@ app.get("/callback", function(req, res) {
                             }));
                     });
                 } else {
-                   error("invalid_token");
+                    error("invalid_token");
                 }
             });
         }

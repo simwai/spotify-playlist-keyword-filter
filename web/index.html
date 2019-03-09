@@ -5,7 +5,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Spotify Playlist Keyword Filter</title>
-    <!-- Bootstrap CSS -->
+    <!-- ****** faviconit.com Favicons ****** -->
+    <link rel="shortcut icon" href="/res/faviconit/favicon.ico">
+    <link rel="icon" sizes="16x16 32x32 64x64" href="/res/faviconit/favicon.ico">
+    <link rel="icon" type="image/png" sizes="196x196" href="/res/faviconit/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="160x160" href="/res/faviconit/favicon-160.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/res/faviconit/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/res/faviconit/favicon-64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/res/faviconit/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/res/faviconit/favicon-16.png">
+    <link rel="apple-touch-icon" href="/res/faviconit/favicon-57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/res/faviconit/favicon-114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/res/faviconit/favicon-72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/res/faviconit/favicon-144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/res/faviconit/favicon-60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/res/faviconit/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/res/faviconit/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/res/faviconit/favicon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/res/faviconit/favicon-180.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="/res/faviconit/favicon-144.png">
+    <meta name="msapplication-config" content="/res/faviconit/browserconfig.xml">
+    <!-- ****** faviconit.com Favicons ****** -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -265,8 +286,6 @@
                     loggedIn = true;
                     navigationHandler(true, false);
 
-                    // how can i move this to the js start?
-
                     var playlists = (async function() {
                         var playlists = await fetchPlaylists(uid);
                         renderPlaylists(playlists);
@@ -311,19 +330,6 @@
 
 
     function refreshToken() {
-        /*
-        $.ajax({
-            url: "/refresh_token",
-            data: { refresh_token: refresh_token },
-            success: function(r) {
-                console.log("refreshed token");
-            },
-            error: function(r) {
-                console.log("token refresh failed");
-                console.log(JSON.stringify(r));
-            }
-        });
-        */
         window.location = "/refresh_token";
     }
 
@@ -376,8 +382,6 @@
                 }
             });
         });
-
-        console.log(access_token);
     }
 
     async function getSpotifySets(url, data) {
@@ -387,8 +391,6 @@
 
         do {
             var response = await getSpotify(url, data);
-            console.log(response);
-
             var set = response.items;
             items.push(set);
 
@@ -400,33 +402,6 @@
 
         return items;
     }
-
-    /*
-        function getTracksUrl() {
-            var firstIndex;
-            var secondIndex
-
-            var isBreak = false
-            $.each(playlists, function(index, val) {
-                var playlistSet = val;
-                $.each(playlistSet, function(index, val) {
-                    if (val.id == selectedPlaylistSpotifyId) {
-                        secondIndex = index;
-                        isBreak = true;
-                        return false;
-                    }
-                });
-
-                if (isBreak) {
-                    firstIndex = index;
-                    return false;
-                }
-            });
-
-            var tracksUrl = playlists[firstIndex][secondIndex].tracks;
-            return tracksUrl;
-        }
-        */
 
     async function fetchTracks() {
         var url = "https://api.spotify.com/v1/users/" + uid + "/playlists/" + selectedPlaylistSpotifyId + "/tracks";
@@ -440,18 +415,24 @@
         var tracks = await getSpotifySets(url, data);
         console.log("tracks: " + JSON.stringify(tracks));
 
-        return tracks
+        return tracks;
     }
 
-    function getAZLyrics(url) {
+    function test(json) {
+        console.log(json);
+    }
+
+    function getAZLyrics(artist, song) {
         return new Promise((resolve, reject) => {
-            $.get(url, {
-                dataType: "html",
+            $.ajax({
+                //url: "http://localhost:8010/proxy/lyrics/" + artist + "/" + song + ".html",
+                url: "/proxy/lyrics/" + artist + "/" + song + ".html",
                 success: function(r) {
                     console.log(r);
                     resolve(r);
                 },
                 error: function(r) {
+                    console.log(r);
                     error("get_azlyrics");
                     reject("get_azlyrics");
                 }
@@ -472,39 +453,55 @@
             song = song.replace(" ", "");
         }
 
-        console.log(song);
+        // can be And or &
+        /*
+        if (song.includes("&")) {
+            song = song.replace("$", "And");
+        }
+        */
+
+        artist = artist.toLowerCase();
+        song = song.toLowerCase();
+
         console.log(artist);
+        console.log(song);
 
-        var url = "https://www.azlyrics.com/lyrics/" + artist + "/" + song + ".html";
-        var htmlObj = await getAZLyrics(url);
-
-
-
-        lyrics = "";
+        var htmlObj = await getAZLyrics(artist, song);
+        var lyrics = $(htmlObj).find(".ringtone ~ div").html();
+        var lyrics = lyrics.replace(/(?=<).*(?=>)./g, "");
+        console.log(lyrics);
 
         return lyrics;
     }
 
     async function fetchAllLyrics(tracks) {
-        var lyrics = [];
+        var lyricsArr = [];
 
-        $.each(tracks, function(index, val) {
-            var artist = val.track.artists.name;
+        for (var val of tracks[0]) {
+            var artist = val.track.artists[0].name;
             var song = val.track.name;
+            console.log("artist: " + artist);
+            console.log("song: " + song);
 
-            (async function() {
+            try {
                 var lyrics = await fetchLyrics(artist, song);
-                this.lyrics.push(lyrics);
+
+                lyricsArr.push(lyrics);
                 console.log(this.lyrics);
-            })();
-        });
+            } catch (e) {
+                console.log(e);
+            }
+
+            break;
+
+        };
 
         return lyrics;
     }
 
-    function startFiltering() {
-        var tracks = fetchTracks();
-        var lyrics = fetchAllLyrics(tracks);
+    async function startFiltering() {
+        var tracks = await fetchTracks();
+        fetchAllLyrics(tracks);
     }
 
     function createTag() {
