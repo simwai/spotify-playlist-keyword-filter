@@ -43,7 +43,6 @@ app.use(express.static(__dirname + "/web"))
 app.get('/proxy/*', function(req, res) {
     var urlPart = req.url.substring(6, req.url.length);
     var url = "https://www.azlyrics.com" + urlPart;
-    console.log("substring: " + url);
     req.pipe(request(url)).pipe(res);
 });
 
@@ -54,7 +53,7 @@ app.get("/login", function(req, res) {
     res.cookie(stateKey, state);
 
     // your application requests authorization
-    var scope = "user-read-private user-read-email";
+    var scope = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative";
     res.redirect("https://accounts.spotify.com/authorize?" +
         querystring.stringify({
             response_type: "code",
