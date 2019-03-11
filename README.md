@@ -1,10 +1,8 @@
 # Spotify Playlist Keyword Filter
 
-A web application to filter out songs from Spotify playlists based on keywords.
-
 Money, Bitch, Smoking etc. All these words are in most of the current songs. If you want to have a clean playlist with none of such words, start using Spotify Playlist Keyword Filter. Maybe you have an addiction or little respect for women then listening to selected music can be benefiting.
 
-Currently, the app is not hosted.
+Currently, the app is still in work.
 
 ## Installation
 
@@ -37,7 +35,6 @@ exports.redirectUri = redirectUri;
 #### Running the app
 In order to run the app, open the web folder, and run its "app.js" file.
 
-    $ cd web
-    $ node app.js
+    $ npm run-script start-server
 
 Then, open "http://localhost:8888" in a browser.
