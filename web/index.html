@@ -616,7 +616,7 @@
         });
     }
 
-    function createPlaylist(name) {
+    async function createPlaylist(name) {
         var url = "https://api.spotify.com/v1/users/" + uid + "/playlists";
         var data = JSON.stringify({
             "name": name,
