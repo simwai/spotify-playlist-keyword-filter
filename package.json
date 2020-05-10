@@ -4,16 +4,24 @@
   "description": "A web app to filter song with certain keywords from Spotify playlists.",
   "main": "server.js",
   "dependencies": {
-    "cookie-parser": "^1.4.4",
-    "cors": "^2.8.4",
-    "cryptiles": ">=4.1.2",
-    "express": "~4.16.0",
-    "local-cors-proxy": "^1.0.2",
-    "querystring": "~0.2.0",
-    "request": "~2.83.0"
+    "@hapi/boom": "latest",
+    "@hapi/cryptiles": "latest",
+    "@hapi/hoek": "latest",
+    "axios": "latest",
+    "cheerio": "latest",
+    "cookie-parser": "latest",
+    "cors": "latest",
+    "express": "latest",
+    "local-cors-proxy": "latest",
+    "proxy-list-random": "latest",
+    "public-ip": "latest",
+    "querystring": "latest",
+    "request": "latest",
+    "tunnel": "latest"
   },
   "devDependencies": {
-    "npm-run-all": "^4.1.5"
+    "eslint": "latest",
+    "npm-run-all": "latest"
   },
   "repository": {
     "type": "git",
@@ -23,14 +31,17 @@
     "spotify"
   ],
   "author": "Simon Waiblinger",
-  "license": "MIT",
+  "license": "CC BY-NC-SA 4.0",
   "bugs": {
     "url": "https://github.com/simwai/spotify-playlist-keyword-filter/issues"
   },
   "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
   "scripts": {
-    "start": "npm-run-all -p start-server start-proxy",
+    "start": "npm-run-all -p start-server start-proxy-1 start-proxy-2",
     "start-server": "node server.js",
-    "start-proxy": "lcp --proxyUrl https://www.azlyrics.com"
+    "start-proxy-1": "lcp --proxyUrl https://www.azlyrics.com",
+    "start-proxy-2": "lcp --proxyUrl https://www.proxy-list.download --port 8011",
+    "debug": "npm-run-all -p debug-server start-proxy-1 start-proxy-2",
+    "debug-server": "node --inspect server.js"
   }
 }
