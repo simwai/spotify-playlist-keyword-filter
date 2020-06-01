@@ -9,8 +9,9 @@
     "@hapi/hoek": "latest",
     "axios": "latest",
     "cheerio": "latest",
+    "child_process": "^1.0.2",
     "cookie-parser": "latest",
-    "cors": "latest",
+    "cors": "^2.8.5",
     "express": "latest",
     "local-cors-proxy": "latest",
     "proxy-list-random": "latest",
@@ -21,7 +22,10 @@
   },
   "devDependencies": {
     "eslint": "latest",
-    "npm-run-all": "latest"
+    "eslint-config-standard": "latest",
+    "npm-run-all": "latest",
+    "stylelint": "latest",
+    "stylelint-config-standard": "latest"
   },
   "repository": {
     "type": "git",
@@ -37,11 +41,11 @@
   },
   "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
   "scripts": {
-    "start": "npm-run-all -p start-server start-proxy-1 start-proxy-2",
+    "start": "npm-run-all -p start-server start-proxy",
     "start-server": "node server.js",
-    "start-proxy-1": "lcp --proxyUrl https://www.azlyrics.com",
-    "start-proxy-2": "lcp --proxyUrl https://www.proxy-list.download --port 8011",
-    "debug": "npm-run-all -p debug-server start-proxy-1 start-proxy-2",
-    "debug-server": "node --inspect server.js"
+    "start-proxy": "lcp --proxyUrl https://www.azlyrics.com",
+    "debug": "npm-run-all -p debug-server start-proxy",
+    "debug-server": "node --inspect server.js",
+    "stylelint": "npx stylelint **/*.css"
   }
 }

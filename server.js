@@ -6,12 +6,8 @@ const cookieParser = require("cookie-parser");
 const util = require("util");
 const axios = require("axios");
 const tunnel = require("tunnel");
+const exec = require('child_process').exec;
 // const cheerio = require("cheerio");
-
-const { spawn } = require("child_process");
-const bat = spawn("cmd.exe", ["/c", "nordvpn-connect.bat"]);
-
-// var proxy = require('proxy-list-random');
 
 const spotifyData = require("./spotify-data");
 
@@ -20,12 +16,8 @@ const app = express();
 const stateKey = "spotify_auth_state";
 let uid;
 let refresh_token;
-let currentProxy;
 
 let proxyRequestCounter = 0;
-
-// var proxyOffset = 0;
-// var proxies = [];
 
 /**
  * Generates a random string containing numbers and letters
@@ -48,166 +40,47 @@ app.use(express.static(__dirname + "/web"))
 	.use(cors())
 	.use(cookieParser());
 
-async function getData(url, proxyData = null) {
-	let config;
-
-	if (url == null) {
-		console.log("url is null");
-		return;
-	}
-
-	if (proxyData == null) {
-		config = {
-			method: "GET",
-			url: url
-		};	
-
-		return axios(config);
-	} else {		
-		const proxyPort = proxyData.port == null ? 80 : proxyData.port;
-		const agent = tunnel.httpsOverHttp({
-			proxy: {
-				host: proxyData.ip,
-				port: proxyPort
-			},
-		});			
-
-		const instance = axios.create({
-			baseUrl: url,
-			httpsAgent: agent
-		});
-
-		config = {
-			method: "GET",
-			url: url
-			//proxy?
-		};
-
-		return instance(config);
-	}
-
-	// return axios(config);
+function reconnectNordVPN() {
+	exec('cmd.exe /c nordvpn.bat');
 }
 
-async function getProxy() {
-	// try {
-	// 	let proxyUrl = "https://gimmeproxy.com/api/getProxy?get=true&supportsHttps=true&maxCheckPeriod=300&anonimityLevel=1";
+/**
+ * @param  {number} duration in milliseconds
+ */
+function sleep(duration) {
+	const currentTime = new Date().getTime();
 
-	// 	const response = await getData(proxyUrl);
-	// 	proxyRequestCounter++;
-
-	// 	const proxyData = response.data;
-	// 	console.log("newProxy");
-	// 	console.log(proxyData);
-	// 	currentProxy = proxyData;
-
-	// 	return;
-	// } catch (error) {
-	// 	console.log("gimmeproxy suck dicks");
-	// }
-
-	try {
-		// let proxyUrl = "https://www.proxy-list.download/api/v1/get";
-
-		// const response = await getData(proxyUrl);		
-		// proxyRequestCounter++;
-
-		// const proxyData = response.data;
-		// console.log("newProxy" + proxyData[0]);
-
-		// if (currentProxy != proxyData[0]) {
-		// 	currentProxy = proxyData[0];
-		// } else {
-		// 	if (proxyListCounter < proxyData.length) {
-		// 		currentProxy = proxyData[proxyListCounter];
-		// 		proxyListCounter++;
-		// 	} else {
-		// 		console.log("proxylist scraping exhausted");
-		// 	}
-		// }		
-
-		bat.stdout.on("data", (data) => {
-			console.log(data.toString());
-		});
-
-		try {
-			let proxyUrl = "localhost:8010";
-
-			const response = await getData(proxyUrl);
-			proxyRequestCounter++;
-
-			const proxyData = response.data;
-			console.log("newProxy");
-			console.log(proxyData);
-			currentProxy = proxyData;
-
-			return;
-		} catch (error) {
-			console.log("localhost sucks dicks");
-		}
-
-		return;
-	} catch (error) {
-		// console.log("proxylist sucks");
-		console.log("batch script sucks");
-	}
-
-	
-	// try {
-	// 	let proxyUrl = "https://free-proxy-list.net/";
-
-	// 	const response = await getData(proxyUrl);	
-	// 	proxyRequestCounter++;
-
-	// 	const html = response.data;
-	// 	const $ = cheerio.load(html); 	
-
-	// 	const proxy = $("tbody").find("td").first().text();
-	// 	console.log("proxy scraped" + proxy);
-	// 	currentProxy = proxy;
-
-	// 	return;
-	// } catch (error) {
-	// 	console.log("proxy scraped sucks");
-	// }
+	while (currentTime + duration >= new Date().getTime()) { }
 }
 
-app.get("/proxy/lyrics/*", async (req, res) => {
+/**
+ * @param  {string} url
+ */
+async function getData(url) {
+	const res = await axios.get(url);
+	return res;
+}
+
+app.get("/proxy/lyrics/*", (req, res) => {
+	if (proxyRequestCounter === 0 || proxyRequestCounter % 30 === 0) {
+		reconnectNordVPN();
+		sleep(20000);
+	}
+
 	const urlPart = req.url.substring(6, req.url.length);
-	const url = "https://www.azlyrics.com" + urlPart;
+	const url = "http://localhost:8010/proxy" + urlPart;
 
-	if (proxyRequestCounter == 0 || proxyRequestCounter % 50 == 0) {
-		await getProxy();
-		proxyRequestCounter++;
-	}
-
-	try {
-		if (currentProxy != null) {
-			const response = await getData(url, currentProxy);
-			req.pipe(response.data).pipe(res);
-		} else {
-			console.log("currentproxy is null or whatever");
+	getData(url).then(response => req.pipe(response.data).pipe(res).on("error", (e) => {
+		console.log(e);
+	})).catch(error => {
+		if (!error.isAxiosError) {
+			console.log("axios error");
+			console.log(error);
 		}
-	} catch (error) {
-		let inGetProxyLoop = true;
-		while (inGetProxyLoop) {
-			try {
-				if (currentProxy != null) {
-					const response = await getData(url, currentProxy);
-					req.pipe(response.data).pipe(res);
-				} else {
-					console.log("currentproxy is null or whatever");
-				}
-			} catch (error) {
-				if (!error.isAxiosError) {
-					break;
-				}
 
-				await getProxy();
-				proxyRequestCounter++;
-			}
-		}
-	}
+		res.status(204).send({ error: "Lyrics scraping failed!" });
+	});
+	proxyRequestCounter++;
 });
 
 app.get("/login", function (req, res) {
@@ -218,7 +91,7 @@ app.get("/login", function (req, res) {
 	var scope = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative";
 	res.redirect("https://accounts.spotify.com/authorize?" + querystring.stringify({
 		response_type: "code",
-		client_id: spotifyData.clientId,scope: scope,
+		client_id: spotifyData.clientId, scope: scope,
 		redirect_uri: spotifyData.redirectUri,
 		state: state
 	}));
@@ -275,10 +148,10 @@ app.get("/callback", function (req, res) {
 						}
 
 						// we can also pass the token to the browser to make requests from there
-						res.redirect("/#" + querystring.stringify({ 
-							access_token: access_token, 
-							refresh_token: refresh_token, 
-							uid: uid 
+						res.redirect("/#" + querystring.stringify({
+							access_token: access_token,
+							refresh_token: refresh_token,
+							uid: uid
 						}));
 					});
 				} else {

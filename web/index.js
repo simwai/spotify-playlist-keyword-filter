@@ -163,71 +163,13 @@ function renderPlaylists(playlists) {
     })
 }
 
-// function getRandomProxy(option) {
-//     var url = "";
-//     var dataType = "";
-
-//     if (option == 1) {
-//         url = "http://pubproxy.com/api/proxy";
-//         dataType = "json";
-//     }
-
-//     if (option == 2) {
-//         url = "http://localhost:8011/proxy/api/v1/get?type=http&anon=anonymous";
-//         dataType = "text/plain";
-//     }
-
-//     if (option == 3) {
-//         url = "https://api.getproxylist.com/proxy";
-//         dataType = "json";
-//     }
-
-//     if (option == 4) {
-//         url ="http://localhost:8888/randomProxies";
-//         dataType="json";
-//     }
-
-//     return new Promise((resolve, reject) => {
-//         $.ajax({
-//             url: url,
-//             dataType: dataType,
-//             success: function (r) {
-//                 console.log("random proxy success", r);             
-
-//                 var ip = "";
-//                 if (option == 1) {
-//                     ip = r[0].ipPort;
-//                 }
-
-//                 if (option == 2) {
-//                     ip = r.responseText.split("\n")[1];
-//                 }
-
-//                 if (option == 3) {
-//                     ip = r.ip + ":" + r.port;
-//                 }       
-                
-//                 if (option == 4) {
-//                     ip = r.ipPort;
-//                 }
-
-//                 resolve(ip);
-//             },
-//             error: function (r) {
-//                 error("get_random_proxy");
-//                 reject(r);
-//             }
-//         })
-//     });
-// }
-
 async function getAZLyrics(artist, song) {
     var res = $.ajax({
-        //url: "http://localhost:8010/proxy/lyrics/"  + artist + "/" + song + ".html",
         url: "http://localhost:8888/proxy/lyrics/"  + artist + "/" + song + ".html",
         crossDomain: false,
         processData: false,
         success: function (r) {
+			console.log("request for " + song + " succeeded");
             return r;
         },
         error: function (r) {
@@ -330,33 +272,13 @@ async function fetchLyrics(artist, song) {
 }
 
 async function fetchAllLyrics(tracks) {
-    var lyricsArr = [];
-
-    // var proxy = "localhost:8888";
-    // try {
-    //     proxy = await getRandomProxy(4);
-    // } catch {
-    //     error("fetch_all_lyrics_1")
-    // }   
-
-    // console.log("proxy", proxy);
+	var lyricsArr = [];
     var requestCounter = 0;
 
     for (var val of tracks[0]) {
         var artist = val.track.artists[0].name;
         var song = val.track.name;
         var uri = val.track.uri;
-        // console.log("artist: " + artist);
-        // console.log("song: " + song);
-
-        // if (requestCounter % 10 == 0) {
-        //     proxy = await getRandomProxy(4);
-        // }
-
-        // if (proxy == null) {
-        //     error("fetch_all_lyrics_2");
-        //     return null;
-        // }
 
         var lyrics = await fetchLyrics(artist, song);
 
@@ -369,12 +291,12 @@ async function fetchAllLyrics(tracks) {
             lyricsArr.push(data);
         } else {
             error("fetch_all_lyrics_3");
-            return null;
+            // return null;
         }
 
         requestCounter++;
 
-        if (requestCounter == 2) {
+        if (requestCounter == 20) {
             break;
         }
     };
@@ -479,6 +401,7 @@ async function startFiltering() {
         var lyrics = await fetchAllLyrics(tracks);
 
         if (lyrics == null) {
+			console.log("filtering failed");
             return;
         }
 
