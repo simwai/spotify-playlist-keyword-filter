@@ -1,25 +1,34 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [        
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome",
-            "url": "http://localhost:8888",
-            "webRoot": "${workspaceFolder}\\res"
-        },
+    "configurations": [
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Debug",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\server.js",
-            //prelaunch task run-proxy not working 
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "debug",
+                "--inspect=9229"
+            ]
+        }
+    ],
+    "tasks": [
+        {
+            "label": "run-proxy",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "proxy"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
