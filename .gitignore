@@ -1,4 +1,4 @@
-/node_modules
-/planning
+node_modules
 spotify-data.js
 planning
+.env

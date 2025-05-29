@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "ms-vscode.vscode-typescript-next",
+        "nicoespeon.abracadabra",
+        "ambar.bundle-size",
+        "kisstkondoros.vscode-codemetrics",
+        "mikestead.dotenv"
+    ]
+}
