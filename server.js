@@ -1,14 +1,18 @@
 const express = require("express");
-const request = require("request");
 const cors = require("cors");
-const querystring = require("querystring");
+const path = require("path");
+const { stringify } = require("querystring");
 const cookieParser = require("cookie-parser");
-const util = require("util");
-const axios = require("axios");
+const { inspect } = require("util");
+const needle = require("needle");
+const { gotScraping } = require("got-scraping");
 
-const spotifyData = require("./spotify-data");
+const { clientId, redirectUri, clientSecret } = require("./spotify-data.js");
 
 const app = express();
+app.use(express.static(path.join(__dirname, "src")))
+app.use(cors());
+app.use(cookieParser());
 
 const stateKey = "spotify_auth_state";
 let uid;
@@ -28,41 +32,38 @@ function generateRandomString(length) {
   return text;
 }
 
-app
-  .use(express.static(__dirname + "/web"))
-  .use(cors())
-  .use(cookieParser());
-
-function sleep(duration) {
-  const currentTime = new Date().getTime();
-
-  while (currentTime + duration >= new Date().getTime()) {}
-}
-
-async function getData(url) {
-  const res = await axios.get(url);
-  return res;
-}
-
-app.get("/proxy/lyrics/*", async (req, res) => {
-  const urlPart = req.url.substring(6, req.url.length);
-  const url = `http://localhost:8010/proxy${urlPart}`;
+app.all("/proxy/*", async (req, res) => {
+  const url = req.url.substring(7).replace("https", "http");
 
   try {
-    const response = await getData(url);
-    req
-      .pipe(response.data)
-      .pipe(res)
-      .on("error", (e) => {
-        console.log(e);
-      });
-  } catch (error) {
-    if (!error.isAxiosError) {
-      console.log("axios error");
-      console.log(error);
-    }
+    const response = await gotScraping({
+      method: req.method,
+      url: url,
+      followRedirect: true,
+      maxRedirects: 20,
+      responseType: "json",
+      headerGeneratorOptions:{
+       browsers: [
+           {
+               name: 'chrome',
+               minVersion: 87,
+               maxVersion: 89
+           }
+       ],
+       devices: ['desktop'],
+       locales: ['de-DE', 'en-US'],
+       operatingSystems: ['windows', 'linux'],
+      }
+    });
 
-    res.status(204).send({ error: "Lyrics scraping failed!" });
+    res.set("access-control-allow-origin", "*");
+    res.set("access-control-allow-headers", "*");
+    res.set("access-control-allow-methods", "*");
+
+    res.status(response.statusCode).send(response.body);
+  } catch (error) {
+    console.log("Internal Server Error: Proxy Failed\n", error);
+    res.status(500).send("Internal Server Error: Proxy Failed");
   }
 
   proxyRequestCounter++;
@@ -75,11 +76,11 @@ app.get("/login", (req, res) => {
   const scope =
     "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative";
   res.redirect(
-    `https://accounts.spotify.com/authorize?${querystring.stringify({
+    `https://accounts.spotify.com/authorize?${stringify({
       response_type: "code",
-      client_id: spotifyData.clientId,
+      client_id: clientId,
       scope,
-      redirect_uri: spotifyData.redirectUri,
+      redirect_uri: redirectUri,
       state,
     })}`
   );
@@ -93,25 +94,25 @@ app.get("/callback", (req, res) => {
 
   if (!error) {
     if (state === null || state !== storedState) {
-      error("state_mismatch");
+      res.status(400).send("Invalid state parameter");
     } else {
       res.clearCookie(stateKey);
       const authOptions = {
         url: "https://accounts.spotify.com/api/token",
         form: {
           code,
-          redirect_uri: spotifyData.redirectUri,
+          redirect_uri: redirectUri,
           grant_type: "authorization_code",
         },
         headers: {
           Authorization: `Basic ${Buffer.from(
-            `${spotifyData.clientId}:${spotifyData.clientSecret}`
+            `${clientId}:${clientSecret}`
           ).toString("base64")}`,
         },
         json: true,
       };
 
-      request.post(authOptions, (error, response, body) => {
+      needle.post(authOptions.url, authOptions.form, { headers: authOptions.headers }, (error, response, body) => {
         if (!error && response.statusCode === 200) {
           const access_token = body.access_token;
           refresh_token = body.refresh_token;
@@ -122,31 +123,36 @@ app.get("/callback", (req, res) => {
             json: true,
           };
 
-          request.get(options, (error, response, body) => {
-            console.log(`body: ${util.inspect(body, false, null, true)}`);
-            uid = body.id;
-            console.log(body.id);
+          needle.get(options.url, { headers: options.headers }, (error, response, body) => {
+            if (!error && response.statusCode === 200) {
+              console.log(`body: ${inspect(body, false, null, true)}`);
+              uid = body.id;
+              console.log(body.id);
 
-            if (uid == null) {
-              error("uid_null");
-              return;
+              if (uid == null) {
+                res.status(400).send("Invalid user ID");
+              } else {
+                res.redirect(
+                  `/#${stringify({
+                    access_token,
+                    refresh_token,
+                    uid,
+                  })}`
+                );
+              }
+            } else {
+              res.status(500).send("Internal Server Error: Failed to fetch user data");
+              console.error("Failed to fetch user data\n", error);
             }
-
-            res.redirect(
-              `/#${querystring.stringify({
-                access_token,
-                refresh_token,
-                uid,
-              })}`
-            );
           });
         } else {
-          error("invalid_token");
+          res.status(400).send("Invalid token");
+          console.error("Invalid token\n", error);
         }
       });
     }
   } else {
-    error("authorization_error");
+    res.status(400).send("Authorization error");
   }
 });
 
@@ -155,7 +161,7 @@ app.get("/refresh_token", (req, res) => {
     url: "https://accounts.spotify.com/api/token",
     headers: {
       Authorization: `Basic ${Buffer.from(
-        `${spotifyData.clientId}:${spotifyData.clientSecret}`
+        `${clientId}:${clientSecret}`
       ).toString("base64")}`,
     },
     form: {
@@ -165,22 +171,23 @@ app.get("/refresh_token", (req, res) => {
     json: true,
   };
 
-  request.post(authOptions, (error, response, body) => {
+  needle.post(authOptions.url, authOptions.form, { headers: authOptions.headers }, (error, response, body) => {
     if (!error && response.statusCode === 200) {
-      console.log("request triggered");
+      console.log("Request triggered");
       const access_token = body.access_token;
 
       res.redirect(
-        `/#${querystring.stringify({
+        `/#${stringify({
           access_token,
           refresh_token,
           uid,
         })}`
       );
+    } else {
+      res.status(500).send("Internal Server Error: Failed to refresh token");
+      console.error("Failed to refresh token\n", error);
     }
   });
-
-  console.log("request after triggered");
 });
 
 console.log("Listening on 8888");
