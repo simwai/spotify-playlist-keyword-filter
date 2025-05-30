@@ -1,0 +1,123 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true,
+    "node": true
+  },
+  "extends": [
+    "standard",
+    "eslint:recommended",
+    "plugin:node/recommended",
+    "plugin:import/recommended",
+    "plugin:promise/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "strict": 0,
+    "camelcase": "off",
+    "prefer-const": "error",
+    "curly": [
+      "error",
+      "all"
+    ],
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off",
+    "max-len": "off",
+    "no-mixed-operators": "off",
+    "no-tabs": "off",
+    "quotes": "off",
+    "semi": "off",
+    "space-before-function-paren": "off",
+    "indent": "off",
+    "object-curly-spacing": "off",
+    "array-bracket-spacing": "off",
+    "block-spacing": "off",
+    "comma-dangle": "off",
+    "comma-spacing": "off",
+    "computed-property-spacing": "off",
+    "func-call-spacing": "off",
+    "key-spacing": "off",
+    "keyword-spacing": "off",
+    "no-multi-spaces": "off",
+    "no-trailing-spaces": "off",
+    "no-whitespace-before-property": "off",
+    "padded-blocks": "off",
+    "rest-spread-spacing": "off",
+    "space-before-blocks": "off",
+    "space-in-parens": "off",
+    "space-infix-ops": "off",
+    "template-curly-spacing": "off",
+    "yield-star-spacing": "off",
+    "max-nested-callbacks": [
+      "error",
+      {
+        "max": 5
+      }
+    ],
+    "max-statements-per-line": [
+      "error",
+      {
+        "max": 2
+      }
+    ],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "(_.*)"
+      }
+    ],
+    "no-var": "error",
+    "no-empty-function": "error",
+    "no-inline-comments": "off",
+    "no-lonely-if": "error",
+    "no-new": "off",
+    "no-return-assign": "off",
+    "spaced-comment": "error",
+    "yoda": "error",
+    "no-useless-constructor": "off",
+    "no-async-promise-executor": "off",
+    "no-new-func": "off",
+    "no-undef": "off",
+    "node/exports-style": [
+      "error",
+      "module.exports"
+    ],
+    "node/file-extension-in-import": "off",
+    "node/prefer-global/buffer": [
+      "error",
+      "always"
+    ],
+    "node/prefer-global/console": [
+      "error",
+      "always"
+    ],
+    "node/prefer-global/process": [
+      "error",
+      "always"
+    ],
+    "node/prefer-global/url-search-params": [
+      "error",
+      "always"
+    ],
+    "node/prefer-global/url": [
+      "error",
+      "always"
+    ],
+    "node/prefer-promises/dns": "error",
+    "node/prefer-promises/fs": "off",
+    "node/no-unpublished-require": "off",
+    "node/no-unpublished-import": "off",
+    "node/no-unsupported-features/es-syntax": "off",
+    "node/no-path-concat": "off",
+    "node/no-extraneous-import": "off",
+    "node/no-missing-import": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages"
+    ],
+    "promise/always-return": "off"
+  }
+}

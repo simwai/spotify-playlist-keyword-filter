@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Spotify Playlist Keyword Filter</title>
+
+    <!-- ****** faviconit.com Favicons ****** -->
+    <link rel="shortcut icon" href="/res/faviconit/favicon.ico" />
+    <link
+      rel="icon"
+      sizes="16x16 32x32 64x64"
+      href="/res/faviconit/favicon.ico"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="196x196"
+      href="/res/faviconit/favicon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="160x160"
+      href="/res/faviconit/favicon-160.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/res/faviconit/favicon-96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="64x64"
+      href="/res/faviconit/favicon-64.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/res/faviconit/favicon-32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/res/faviconit/favicon-16.png"
+    />
+    <link rel="apple-touch-icon" href="/res/faviconit/favicon-57.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="114x114"
+      href="/res/faviconit/favicon-114.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="72x72"
+      href="/res/faviconit/favicon-72.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="144x144"
+      href="/res/faviconit/favicon-144.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="60x60"
+      href="/res/faviconit/favicon-60.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="/res/faviconit/favicon-120.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="76x76"
+      href="/res/faviconit/favicon-76.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="/res/faviconit/favicon-152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/res/faviconit/favicon-180.png"
+    />
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta
+      name="msapplication-TileImage"
+      content="/res/faviconit/favicon-144.png"
+    />
+    <meta
+      name="msapplication-config"
+      content="/res/faviconit/browserconfig.xml"
+    />
+    <!-- ****** faviconit.com Favicons ****** -->
+
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+
+    <script src="./index.js" type="module"></script>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <nav id="header" class="navbar navbar-dark navbar-fixed-top bg-dark">
+        <a id="navbar" class="text-center" href="index.html">
+          <div id="navbar-logo"></div>
+          <span id="navbar-title">Spotify Playlist Keyword Filter</span>
+        </a>
+      </nav>
+      <div id="content">
+        <div id="login" class="jumbotron text-center">
+          <h1>Spotify Playlist Keyword Filter</h1>
+          <p>Filter your Spotify playlists now!</p>
+          <br />
+          <a href="/login" class="btn btn-info">Log in with Spotify</a>
+        </div>
+        <div id="logged-in" class="jumbotron">
+          <div id="playlist-form">
+            <h1 id="playlist-title" class="text-center">Pick a playlist:</h1>
+            <br />
+            <table id="playlists" class="table">
+              <thead>
+                <tr>
+                  <!-- <th data-sortable="true">Name</th>
+                                <th data-sortable="true">Track Count</th> -->
+                  <th>Name</th>
+                  <th>Track Count</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="tag-form" class="text-center">
+            <h1>Declare some keywords:</h1>
+            <br />
+            <input type="text" id="tag-input" class="form-control" /><button
+              type="button"
+              id="add-button"
+              class="btn btn-secondary"
+            >
+              Add
+            </button>
+            <br />
+            <div id="tags"></div>
+            <br />
+            <button type="button" id="start-button" class="btn btn-info">
+              Start Filtering
+            </button>
+          </div>
+          <div id="result-output" class="text-center"></div>
+        </div>
+      </div>
+      <div id="footer">
+        <span id="footer-text-left">Made with ♥ by simwai 👨‍</span>
+        <span id="footer-text-right"
+          >💻 Check out the code on
+          <a href="https://github.com/simwai/spotify-playlist-keyword-filter/"
+            >GitHub</a
+          >
+          📃</span
+        >
+      </div>
+    </div>
+  </body>
+</html>
