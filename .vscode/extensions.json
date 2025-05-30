@@ -4,6 +4,7 @@
         "nicoespeon.abracadabra",
         "ambar.bundle-size",
         "kisstkondoros.vscode-codemetrics",
-        "mikestead.dotenv"
+        "mikestead.dotenv",
+        "davidanson.vscode-markdownlint"
     ]
 }
