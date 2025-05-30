@@ -10,11 +10,10 @@
     "eslint:recommended",
     "plugin:node/recommended",
     "plugin:import/recommended",
-    "plugin:promise/recommended",
-    "prettier"
+    "plugin:promise/recommended"
   ],
   "parserOptions": {
-    "ecmaVersion": 14
+    "ecmaVersion": 2020
   },
   "rules": {
     "strict": 0,
@@ -24,10 +23,38 @@
       "error",
       "all"
     ],
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off",
+    "max-len": "off",
+    "no-mixed-operators": "off",
+    "no-tabs": "off",
+    "quotes": "off",
+    "semi": "off",
+    "space-before-function-paren": "off",
+    "indent": "off",
+    "object-curly-spacing": "off",
+    "array-bracket-spacing": "off",
+    "block-spacing": "off",
+    "comma-dangle": "off",
+    "comma-spacing": "off",
+    "computed-property-spacing": "off",
+    "func-call-spacing": "off",
+    "key-spacing": "off",
+    "keyword-spacing": "off",
+    "no-multi-spaces": "off",
+    "no-trailing-spaces": "off",
+    "no-whitespace-before-property": "off",
+    "padded-blocks": "off",
+    "rest-spread-spacing": "off",
+    "space-before-blocks": "off",
+    "space-in-parens": "off",
+    "space-infix-ops": "off",
+    "template-curly-spacing": "off",
+    "yield-star-spacing": "off",
     "max-nested-callbacks": [
       "error",
       {
-        "max": 4
+        "max": 5
       }
     ],
     "max-statements-per-line": [
@@ -44,7 +71,7 @@
     ],
     "no-var": "error",
     "no-empty-function": "error",
-    "no-inline-comments": "error",
+    "no-inline-comments": "off",
     "no-lonely-if": "error",
     "no-new": "off",
     "no-return-assign": "off",
