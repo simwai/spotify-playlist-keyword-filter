@@ -2,3 +2,5 @@ node_modules
 spotify-data.js
 planning
 .env
+.vercel
+dist
