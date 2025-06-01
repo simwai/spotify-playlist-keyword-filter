@@ -15,7 +15,7 @@ function sendErrorToUrl(msg) {
 }
 
 // Configuration
-const API_BASE_URL = 'https://filteryourplaylist.vercel.app'
+const API_BASE_URL = 'https://filteryourplaylist.wobbit.at'
 
 function refreshToken() {
   window.location = API_BASE_URL + '/refresh_token'
