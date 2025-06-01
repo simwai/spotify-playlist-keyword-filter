@@ -15,7 +15,7 @@ function sendErrorToUrl(msg) {
 }
 
 // Configuration
-const API_BASE_URL = 'https://filteryourplaylist-rgw5tl6z2-simwais-projects.vercel.app'
+const API_BASE_URL = 'https://filteryourplaylist.vercel.app'
 
 function refreshToken() {
   window.location = API_BASE_URL + '/refresh_token'
@@ -99,7 +99,7 @@ async function getSpotifySets(url, data) {
   return [allItems] // Keep original return format
 }
 
-async function* fetchTracksGenerator() {
+async function * fetchTracksGenerator() {
   const url =
     'https://api.spotify.com/v1/users/' +
     uid +
