@@ -5,8 +5,8 @@ const config = {
     loginUrl: 'http://localhost:8888/login'
   },
   production: {
-    apiBaseUrl: 'https://filteryourplaylist-rgw5tl6z2-simwais-projects.vercel.app',
-    loginUrl: 'https://filteryourplaylist-rgw5tl6z2-simwais-projects.vercel.app/login'
+    apiBaseUrl: 'https://filteryourplaylist.wobbit.at',
+    loginUrl: 'https://filteryourplaylist.wobbit.at/login'
   }
 }
 
