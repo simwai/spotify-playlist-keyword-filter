@@ -14,8 +14,11 @@ function sendErrorToUrl(msg) {
   window.location = '/#error=' + msg
 }
 
+// Configuration
+const API_BASE_URL = 'https://filteryourplaylist-rgw5tl6z2-simwais-projects.vercel.app'
+
 function refreshToken() {
-  window.location = '/refresh_token'
+  window.location = API_BASE_URL + '/refresh_token'
 }
 
 function navigationHandler(playlistForm, tagForm) {

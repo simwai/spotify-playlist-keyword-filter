@@ -1,7 +1,7 @@
 {
   "name": "spotify-playlist-keyword-filter",
   "version": "0.0.1",
-  "description": "A web app to filter song with certain keywords from Spotify playlists.",
+  "description": "Filter Spotify playlists by removing songs with specific keywords in lyrics",
   "main": "server.js",
   "dependencies": {
     "cookie-parser": "^1.4.5",
