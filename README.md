@@ -66,7 +66,7 @@ You can use `.env.example` as a template.
 Start the server:
 
 ```bash
-npm run start-server
+npm run start
 ```
 
 Then open your browser and navigate to:
@@ -90,7 +90,7 @@ http://localhost:8888
 
 ### Proxy
 
-- `ALL /proxy/*` - Proxy requests with rotating headers
+- `ALL /proxy/*` - Proxy requests with rotating headers (Unused, dead path)
 
 ## Project Structure
 
@@ -144,11 +144,3 @@ This project is currently in development. Feel free to contribute by:
 ## License
 
 CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike 4.0)
-
-## Author
-
-Simon Waiblinger
-
-## Repository
-
-<https://github.com/simwai/spotify-playlist-keyword-filter>
