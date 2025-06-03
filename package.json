@@ -11,22 +11,23 @@
     "got-scraping": "^3.2.15",
     "he": "^1.2.0",
     "needle": "^3.2.0",
-    "popper.js": "^1.16.1",
-    "querystring": "^0.2.0"
+    "prettier-eslint": "^16.4.2",
+    "querystring": "^0.2.0",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@babel/cli": "^7.22.6",
-    "@babel/core": "^7.22.8",
-    "@babel/node": "^7.22.6",
-    "@babel/preset-env": "^7.22.7",
     "@testing-library/jest-dom": "^6.6.3",
     "babel-node": "^0.0.1-security",
+    "concurrently": "^9.1.2",
+    "cpx2": "^8.0.0",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.2",
     "jest": "^29.7.0",
     "kill-port": "^2.0.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.0.0",
+    "rimraf": "^6.0.1",
     "stylelint": "^13.13.1",
     "stylelint-config-prettier": "^9.0.5",
     "supertest": "^7.1.1"
@@ -45,15 +46,14 @@
   },
   "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
   "scripts": {
-    "start": "babel-node server.js",
-    "debug": "babel-node --inspect --trace-warnings server.js",
-    "always-debug": "nodemon babel-node server.js -e js,html,css",
-    "format": "eslint . --fix && prettier . --write",
-    "stop-debug": "kill-port 8888",
-    "stylelint": "stylelint **/*.css",
+    "dev": "kill-port 8888 && npm run clean && concurrently \"npm run watch\" \"npm run backend\"",
+    "backend": "nodemon server.js",
+    "build": "cpx src/**/*.* dist",
+    "watch": "cpx src/**/*.* dist --watch",
+    "format": "eslint . --fix && prettier . --write && stylelint ./src/**/*.css --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build:frontend": "node scripts/build-frontend.js"
+    "clean": "rimraf ./dist"
   }
 }

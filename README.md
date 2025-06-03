@@ -11,6 +11,7 @@ Currently, the app is still in work.
 - Search and retrieve song lyrics from Genius
 - Filter songs based on keyword content
 - Clean playlist management
+- Persistent lyrics caching with SQLite
 
 ## Prerequisites
 
@@ -57,6 +58,9 @@ GENIUS_APP_URL="http://localhost:8888"
 GENIUS_CLIENT_ID="your_genius_client_id_here"
 GENIUS_CLIENT_SECRET="your_genius_client_secret_here"
 GENIUS_CLIENT_ACCESS_TOKEN="your_genius_access_token_here"
+
+# Admin access (optional)
+ADMIN_KEY="your_secret_admin_key_for_cache_management"
 ```
 
 You can use `.env.example` as a template.
@@ -75,6 +79,40 @@ Then open your browser and navigate to:
 http://localhost:8888
 ```
 
+## Persistent Caching System
+
+The application now includes a persistent caching system using SQLite and Sequelize, which:
+
+- Stores song search results and lyrics in a local database
+- Persists data across server restarts
+- Reduces API calls to Genius
+- Improves performance for repeated searches
+
+### Database Details
+
+- The cache is stored in `lyrics_cache.sqlite` in the root directory
+- Cache entries include:
+  - Song metadata (artist, title)
+  - Song ID from Genius
+  - Lyrics content
+  - Timestamp for TTL management
+
+### Cache Management
+
+Cached entries automatically expire after 24 hours, but admin endpoints are available for manual management:
+
+```
+DELETE /api/admin/cache?adminKey=your_admin_key
+```
+
+Clears all cached entries from the database.
+
+```
+GET /api/admin/cache-stats?adminKey=your_admin_key
+```
+
+Returns statistics about the cache usage.
+
 ## API Endpoints
 
 ### Authentication
@@ -88,6 +126,11 @@ http://localhost:8888
 - `GET /api/lyrics/search?artist={artist}&song={song}` - Search for song on Genius
 - `GET /api/lyrics/{songId}` - Fetch lyrics for a specific song
 
+### Cache Management
+
+- `DELETE /api/admin/cache?adminKey={adminKey}` - Clear the lyrics cache
+- `GET /api/admin/cache-stats?adminKey={adminKey}` - Get cache usage statistics
+
 ### Proxy
 
 - `ALL /proxy/*` - Proxy requests with rotating headers
@@ -97,6 +140,7 @@ http://localhost:8888
 ```
 ├── server.js          # Main server file
 ├── src/               # Frontend files
+├── lyrics_cache.sqlite # SQLite database for lyrics cache
 ├── .env               # Environment variables (create this)
 ├── .env.example       # Environment template
 └── package.json       # Dependencies
@@ -110,6 +154,9 @@ http://localhost:8888
 - **needle** - HTTP client
 - **got-scraping** - Web scraping with rotating headers
 - **dotenv** - Environment variable management
+- **sequelize** - ORM for database operations
+- **sqlite3** - SQLite database driver
+- **he** - HTML entity decoder
 
 ## Troubleshooting
 
@@ -117,6 +164,7 @@ http://localhost:8888
 
 1. **"Missing Spotify credentials"** - Make sure your `.env` file contains all required Spotify variables
 2. **"Failed to authenticate with Genius API"** - Verify your Genius API credentials in `.env`
+3. **"Database synchronization error"** - Check file permissions for the SQLite database
 
 ### Debug Mode
 
@@ -125,6 +173,7 @@ The server logs detailed information to the console, including:
 - Lyrics search results
 - Preview of extracted lyrics
 - API response status codes
+- Database operations
 - Error details
 
 ## Security Notes
@@ -132,6 +181,7 @@ The server logs detailed information to the console, including:
 - Never commit your `.env` file to version control
 - Keep your API credentials secure
 - The `.env.example` file shows the required format without exposing real credentials
+- Protect your ADMIN_KEY as it provides access to cache management endpoints
 
 ## Contributing
 
@@ -144,11 +194,3 @@ This project is currently in development. Feel free to contribute by:
 ## License
 
 CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike 4.0)
-
-## Author
-
-Simon Waiblinger
-
-## Repository
-
-<https://github.com/simwai/spotify-playlist-keyword-filter>
