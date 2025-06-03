@@ -72,7 +72,7 @@ a {
 
 #tag-input:focus {
   border-color: #17a2b8;
-  box-shadow: 0 0 0 0.2rem rgba(58, 176, 195, 0.5) !important;
+  box-shadow: 0 0 0 0.2rem rgb(58 176 195 / 50%) !important;
 }
 
 .tag {
@@ -142,7 +142,7 @@ a {
   display: none;
   background-color: #e9ecef;
   border-top: 0.07em solid black;
-  padding: 1.2em 0.6em 1.2em 0.6em;
+  padding: 1.2em 0.6em;
   margin: auto;
   width: inherit;
 }

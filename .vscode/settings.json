@@ -1,7 +1,5 @@
 {
-  "cSpell.words": [
-    "spotify"
-  ],
+  "cSpell.words": ["spotify"],
   "html.format.wrapLineLength": 200,
   "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
   "editor.formatOnType": false,
@@ -10,5 +8,5 @@
   "editor.formatOnSaveMode": "file",
   "files.autoSave": "onFocusChange",
   "vs-code-prettier-eslint.prettierLast": false,
-  "editor.suggest.showSnippets": true,
+  "editor.suggest.showSnippets": true
 }

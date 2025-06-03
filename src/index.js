@@ -196,7 +196,7 @@ async function getSpotifySets(url, data) {
   return [allItems]
 }
 
-async function * fetchTracksGenerator() {
+async function* fetchTracksGenerator() {
   const url =
     'https://api.spotify.com/v1/users/' +
     uid +
