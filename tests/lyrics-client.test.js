@@ -1,4 +1,3 @@
-// Mock fetch globally
 global.fetch = jest.fn()
 global.console = { log: jest.fn(), error: jest.fn() }
 global.DOMParser = jest.fn()
@@ -45,7 +44,7 @@ describe('Client-Side Lyrics Issues', () => {
         json: () =>
           Promise.resolve({
             response: {
-              hits: [], // Empty results
+              hits: [],
             },
           }),
       })
@@ -81,7 +80,7 @@ describe('Client-Side Lyrics Issues', () => {
   describe('fetchLyrics Real Issues', () => {
     test('should handle null song ID', async () => {
       async function fetchLyrics(_artist, _song) {
-        const songId = null // Simulating failed fetchSongId
+        const songId = null
 
         if (!songId) {
           console.log('No song ID available')
@@ -102,7 +101,7 @@ describe('Client-Side Lyrics Issues', () => {
       })
 
       const mockDoc = {
-        querySelector: jest.fn(() => null), // No lyrics element found
+        querySelector: jest.fn(() => null),
       }
 
       global.DOMParser.mockImplementation(() => ({

@@ -4,11 +4,9 @@ const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const path = require('path')
 
-// Mock the modules before requiring them
 jest.mock('needle')
 jest.mock('got-scraping')
 
-// Mock env variables
 process.env.GENIUS_APP_URL = 'http://localhost:8888'
 process.env.GENIUS_CLIENT_ID = 'test_genius_client_id'
 process.env.GENIUS_CLIENT_SECRET = 'test_genius_client_secret'
@@ -22,7 +20,7 @@ const { gotScraping } = require('got-scraping')
 
 const clientId = process.env.SPOTIFY_CLIENT_ID
 const redirectUri = process.env.SPOTIFY_REDIRECT_URI
-const clientSecret = process.env.SPOTIFY_CLIENT_SECRET // Fixed: was using REDIRECT_URI instead of CLIENT_SECRET
+const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
 
 const setupApp = () => {
   const app = express()
@@ -44,7 +42,6 @@ const setupApp = () => {
     return text
   }
 
-  // Proxy route
   app.all('/proxy/*', async (req, res) => {
     const url = req.url.substring(7).replace('https', 'http')
 
@@ -73,14 +70,12 @@ const setupApp = () => {
     }
   })
 
-  // Login route
   app.get('/login', (req, res) => {
     const state = generateRandomString(16)
     res.cookie(stateKey, state)
 
     const scope =
       'playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative'
-    // Manual query string construction instead of URLSearchParams
     const queryParams = [
       'response_type=code',
       `client_id=${clientId}`,
@@ -92,7 +87,6 @@ const setupApp = () => {
     res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`)
   })
 
-  // Callback route
   app.get('/callback', (req, res) => {
     const code = req.query.code || null
     const state = req.query.state || null
@@ -164,7 +158,6 @@ const setupApp = () => {
     }
   })
 
-  // Refresh token route
   app.get('/refresh_token', (req, res) => {
     const authOptions = {
       url: 'https://accounts.spotify.com/api/token',
@@ -203,7 +196,7 @@ describe('Server Tests', () => {
   beforeEach(() => {
     app = setupApp()
     jest.clearAllMocks()
-    console.log = jest.fn() // Suppress console logs during tests
+    console.log = jest.fn()
   })
 
   describe('Authentication Flow', () => {
@@ -255,12 +248,10 @@ describe('Server Tests', () => {
       })
 
       test('should handle successful auth callback with valid state', async () => {
-        // First get login to set state cookie
         const loginResponse = await request(app).get('/login')
         const stateCookie = loginResponse.headers['set-cookie'][0]
         const stateValue = stateCookie.match(/spotify_auth_state=([^;]+)/)[1]
 
-        // Mock needle.post for token exchange
         needle.post.mockImplementationOnce((url, form, options, callback) => {
           callback(
             null,
@@ -272,7 +263,6 @@ describe('Server Tests', () => {
           )
         })
 
-        // Mock needle.get for user profile
         needle.get.mockImplementationOnce((url, options, callback) => {
           callback(
             null,
@@ -325,7 +315,6 @@ describe('Server Tests', () => {
 
     describe('GET /refresh_token', () => {
       test('should refresh access token successfully', async () => {
-        // Mock successful refresh
         needle.post.mockImplementationOnce((url, form, options, callback) => {
           callback(
             null,

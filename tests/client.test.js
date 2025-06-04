@@ -1,9 +1,7 @@
-// Mock jQuery and DOM environment
 const mockJQuery = {
   ajax: jest.fn(),
   each: jest.fn(),
   fn: {},
-  // Add specific methods used in your code
 }
 
 global.$ = jest.fn(() => ({
@@ -25,7 +23,6 @@ global.$ = jest.fn(() => ({
 
 Object.assign(global.$, mockJQuery)
 
-// Mock DOM APIs
 global.window = {
   location: {
     hash: '',
@@ -45,7 +42,6 @@ global.DOMParser = jest.fn(() => ({
   })),
 }))
 
-// Now we can test individual functions by extracting them
 describe('Client-Side Functions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -53,11 +49,9 @@ describe('Client-Side Functions', () => {
 
   describe('Hash Parameter Parsing', () => {
     test('should parse hash parameters correctly', () => {
-      // Mock the function from your code
       function getHashParams() {
         const hashParams = {}
         const queryString = window.location.hash.substring(1)
-        // For browser compatibility, use manual parsing instead of URLSearchParams
         const pairs = queryString.split('&')
         for (const pair of pairs) {
           const [key, value] = pair.split('=')
@@ -100,7 +94,7 @@ describe('Client-Side Functions', () => {
       global.$ = jest.fn((_selector) => mockElement)
 
       function navigationHandler(playlistForm, tagForm) {
-        const loggedIn = true // Mock logged in state
+        const loggedIn = true
 
         $('#login').hide()
         $('#logged-in').hide()
