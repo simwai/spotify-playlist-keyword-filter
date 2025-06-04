@@ -47,7 +47,7 @@
   "scripts": {
     "dev": "kill-port 8888 && npm run clean && concurrently \"npm run watch\" \"npm run backend\"",
     "backend": "nodemon server.js",
-    "build": "cpx src/**/*.* dist",
+    "build": "cpx src/**/*.* dist && cpx res/**/*.* dist",
     "watch": "cpx src/**/*.* dist --watch",
     "format": "eslint . --fix && prettier . --write && stylelint ./src/**/*.css --fix",
     "test": "jest",
