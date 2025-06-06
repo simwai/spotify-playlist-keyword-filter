@@ -11,6 +11,8 @@
     "got-scraping": "^3.2.15",
     "he": "^1.2.0",
     "needle": "^3.2.0",
+    "pg": "^8.16.0",
+    "pg-hstore": "^2.3.4",
     "prettier-eslint": "^16.4.2",
     "querystring": "^0.2.0",
     "sequelize": "^6.37.7",
