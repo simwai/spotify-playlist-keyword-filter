@@ -201,4 +201,12 @@ The two redirect URLs serve different purposes:
 
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
+CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike 4.0)
+
+## Author
+
+Simon Waiblinger
+
+## Repository
+
+<https://github.com/simwai/spotify-playlist-keyword-filter>
