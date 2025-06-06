@@ -5,8 +5,9 @@ configDotenv()
 validateConfig()
 
 const config = {
-  server: {
+  app: {
     port: process.env.PORT || 8888,
+    redirectUrl: process.env.APP_REDIRECT_URL || 'http://localhost:8888',
     isProduction: process.env.NODE_ENV === 'production',
   },
   spotify: {
@@ -18,9 +19,6 @@ const config = {
     clientId: process.env.GENIUS_CLIENT_ID,
     clientSecret: process.env.GENIUS_CLIENT_SECRET,
   },
-  admin: {
-    key: process.env.ADMIN_KEY,
-  },
   cors: {
     origins: [
       'https://simwai.github.io',
@@ -30,7 +28,7 @@ const config = {
     ],
   },
   cache: {
-    ttl: 24 * 60 * 60 * 1000, // 24 hours
+    ttl: 24 * 60 * 60 * 1000,
   },
 }
 

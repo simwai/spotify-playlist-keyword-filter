@@ -1,10 +1,47 @@
 {
-    "configurations": [
-        {
-            "type": "chrome",
-            "name": "http://localhost:8888",
-            "request": "launch",
-            "url": "http://localhost:8888"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Server",
+      "program": "${workspaceFolder}/src/server.js",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "outputCapture": "std"
+    },
+    {
+      "type": "chrome",
+      "name": "Client",
+      "request": "launch",
+      "url": "http://localhost:8888",
+      "webRoot": "${workspaceFolder}/frontend",
+      "serverReadyAction": {
+        "pattern": "ready on",
+        "uriFormat": "http://localhost:8888",
+        "action": "debugWithChrome"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Server/Client",
+      "configurations": [
+        "Server",
+        "Client"
+      ],
+      "preLaunchTask": "npm: kill",
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "spotify-debug",
+        "order": 1
+      }
+    }
+  ]
 }

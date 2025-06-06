@@ -10,7 +10,8 @@
     "eslint:recommended",
     "plugin:node/recommended",
     "plugin:import/recommended",
-    "plugin:promise/recommended"
+    "plugin:promise/recommended",
+    "plugin:json/recommended-legacy"
   ],
   "parserOptions": {
     "ecmaVersion": 2020

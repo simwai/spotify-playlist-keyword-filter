@@ -15,10 +15,8 @@ function setupMiddleware(app) {
 
   app.use(express.json())
   app.use(cookieParser())
-  app.use(express.static('./dist'))
 }
 
 module.exports = {
   setupMiddleware,
-  ...require('./auth.js'),
 }

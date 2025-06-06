@@ -5,6 +5,8 @@
     "ambar.bundle-size",
     "kisstkondoros.vscode-codemetrics",
     "mikestead.dotenv",
-    "davidanson.vscode-markdownlint"
+    "davidanson.vscode-markdownlint",
+    "christian-kohler.path-intellisense",
+    "antfu.unocss"
   ]
 }

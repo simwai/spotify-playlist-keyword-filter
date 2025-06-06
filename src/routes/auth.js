@@ -1,45 +1,55 @@
 const express = require('express')
-const { SpotifyAuthService } = require('../services/spotify-auth.js')
+const config = require('../config/index.js')
+const { TYPES } = require('../types.js')
 
-const router = express.Router()
-const spotifyAuth = new SpotifyAuthService()
+module.exports = (container) => {
+  const router = express.Router()
+  const spotifyAuth = container.get(TYPES.SpotifyAuthService)
 
-router.get('/login', async (req, res) => {
-  try {
-    console.log('🔐 Login endpoint accessed')
-    const authUrl = await spotifyAuth.getAuthUrl(res)
-    res.redirect(authUrl)
-  } catch (error) {
-    console.error('❌ Login error:', error)
-    res.status(500).json({ error: 'Login failed' })
+  const buildErrorRedirect = (errorMessage) => {
+    const baseUrl = config.app.redirectUrl || 'http://localhost:8888'
+
+    return `${baseUrl}/#error=${encodeURIComponent(errorMessage)}`
   }
-})
 
-router.get('/callback', async (req, res) => {
-  try {
-    const redirectUrl = await spotifyAuth.handleCallback(req, res)
-    res.redirect(redirectUrl)
-  } catch (error) {
-    console.error('❌ Callback error:', error)
+  router.get('/login', async (req, res) => {
+    try {
+      console.log('🔐 Login endpoint accessed')
+      console.log('🍪 Existing cookies:', req.cookies)
 
-    if (error.message === 'direct_access') {
-      return res.redirect('/login')
+      const authUrl = await spotifyAuth.getAuthUrl(res)
+      console.log('🔗 Auth URL generated:', authUrl)
+
+      res.redirect(authUrl)
+    } catch (loginError) {
+      console.error('Login failed:', loginError)
+      res.redirect(buildErrorRedirect('Login failed'))
     }
+  })
 
-    const frontendUrl = 'http://localhost:8888' // Should come from config
-    res.redirect(`${frontendUrl}/#error=${encodeURIComponent(error.message)}`)
-  }
-})
+  router.get('/callback', async (req, res) => {
+    try {
+      console.log('Callback endpoint accessed')
+      const redirectUrl = await spotifyAuth.handleCallback(req, res)
 
-router.get('/refresh_token', async (req, res) => {
-  try {
-    const redirectUrl = await spotifyAuth.refreshToken()
-    res.redirect(redirectUrl)
-  } catch (error) {
-    console.error('❌ Refresh token error:', error)
-    const frontendUrl = 'http://localhost:8888' // Should come from config
-    res.redirect(`${frontendUrl}/#error=refresh_failed`)
-  }
-})
+      console.log('Callback successful')
+      res.redirect(redirectUrl)
+    } catch (callbackError) {
+      console.error('Callback failed:', callbackError)
+      res.redirect(buildErrorRedirect('Authentication failed'))
+    }
+  })
 
-module.exports = router
+  router.get('/refresh_token', async (req, res) => {
+    try {
+      console.log('Refresh token endpoint accessed')
+      const redirectUrl = await spotifyAuth.refreshAccessToken()
+      res.redirect(redirectUrl)
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError)
+      res.redirect(buildErrorRedirect('Token refresh failed'))
+    }
+  })
+
+  return router
+}

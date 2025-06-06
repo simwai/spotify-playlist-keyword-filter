@@ -1,42 +1,68 @@
 const express = require('express')
-const { LyricsService } = require('../services/lyrics.js')
+const { TYPES } = require('../types.js')
 
-const router = express.Router()
-const lyricsService = new LyricsService()
-
-router.get('/search', async (req, res) => {
-  try {
-    const { artist, song } = req.query
-
-    if (!artist || !song) {
-      return res.status(400).json({ error: 'Artist and song are required' })
-    }
-
-    const result = await lyricsService.searchSong(artist, song)
-    res.json(result)
-  } catch (error) {
-    console.error('❌ Search error:', error)
-    res.status(500).json({
-      error: 'Failed to search for song',
-      details: error.message,
-    })
+module.exports = (container) => {
+  if (!container) {
+    throw new Error('Container is required for lyrics routes')
   }
-})
 
-router.get('/:songId', async (req, res) => {
+  const router = express.Router()
+  let lyricsService
   try {
-    const { songId } = req.params
-    const result = await lyricsService.getLyrics(songId)
-
-    if (!result) {
-      return res.status(404).json({ error: 'Lyrics not found' })
-    }
-
-    res.json(result)
+    console.log('🔍 Resolving LyricsService from container...')
+    lyricsService = container.get(TYPES.LyricsService)
+    console.log('✅ LyricsService resolved successfully')
   } catch (error) {
-    console.error('❌ Lyrics fetch error:', error)
-    res.status(500).json({ error: 'Failed to fetch lyrics' })
+    console.error('❌ Failed to resolve LyricsService:', error.message)
+    console.log('📋 Available services:', container.listServices())
+    throw new Error(`Route initialization failed: ${error.message}`)
   }
-})
 
-module.exports = router
+  router.get('/search', async (req, res) => {
+    try {
+      const { artist, song } = req.query
+
+      if (!artist || !song) {
+        return res.status(400).json({
+          error: 'Artist and song parameters are required',
+          received: { artist, song },
+        })
+      }
+
+      const searchResult = await lyricsService.searchSong(artist, song)
+      res.json(searchResult)
+    } catch (error) {
+      console.error('❌ Search error:', error)
+      res.status(500).json({
+        error: 'Failed to search for song',
+        details: error.message,
+      })
+    }
+  })
+
+  router.get('/:songId', async (req, res) => {
+    try {
+      const { songId } = req.params
+      if (!songId) {
+        return res.status(400).json({ error: 'Song ID is required' })
+      }
+
+      const lyricsResult = await lyricsService.getLyrics(songId)
+
+      if (!lyricsResult) {
+        return res
+          .status(404)
+          .json({ error: 'Lyrics not found for the given song ID' })
+      }
+      res.json(lyricsResult)
+    } catch (error) {
+      console.error('❌ Lyrics fetch error:', error)
+      res.status(500).json({
+        error: 'Failed to fetch lyrics',
+        details: error.message,
+      })
+    }
+  })
+
+  return router
+}

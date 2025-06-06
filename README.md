@@ -12,7 +12,6 @@ Currently, the app is still in work.
 - Filter songs based on keyword content
 - Clean playlist management
 - Persistent lyrics caching with SQLite database
-- Admin panel for cache management
 - Modular architecture with proper separation of concerns
 
 ## Architecture
@@ -34,13 +33,11 @@ src/
 │   ├── error-handler.js # Error handling
 │   └── index.js        # Middleware setup
 ├── routes/             # Route handlers
-│   ├── admin.js        # Admin endpoints
 │   ├── auth.js         # Authentication routes
 │   ├── lyrics.js       # Lyrics API routes
 │   ├── static.js       # Static file serving
 │   └── index.js        # Route setup
 ├── services/           # Business logic
-│   ├── admin.js        # Admin operations
 │   ├── lyrics.js       # Lyrics processing
 │   └── spotify-auth.js # Spotify authentication
 ├── clients/            # External API clients
@@ -88,8 +85,6 @@ SPOTIFY_CLIENT_ID="your_spotify_client_id_here"
 SPOTIFY_CLIENT_SECRET="your_spotify_client_secret_here"
 SPOTIFY_REDIRECT_URI="http://localhost:8888/callback/"
 
-ADMIN_KEY="your_admin_key_here"
-
 NODE_ENV="development"
 ```
 
@@ -129,13 +124,6 @@ The application will be available at `http://localhost:8888`
 - `GET /api/lyrics/search?artist=<artist>&song=<song>` - Search for song lyrics
 - `GET /api/lyrics/:songId` - Get lyrics for a specific song
 
-### Admin (requires ADMIN_KEY)
-
-- `DELETE /api/admin/cache?adminKey=<key>` - Clear lyrics cache
-- `GET /api/admin/cache-stats?adminKey=<key>` - Get cache statistics
-
-## Database
-
 The application uses SQLite for caching lyrics data. The database file (`lyrics_cache.sqlite`) is automatically created in the root directory on first run.
 
 ## Development
@@ -155,7 +143,6 @@ The application includes intelligent caching to reduce API calls:
 
 - Search results are cached for 24 hours
 - Lyrics are permanently cached once fetched
-- Admin endpoints allow cache inspection and clearing
 - Cache keys are generated based on normalized artist and song names
 
 ## Error Handling
@@ -166,6 +153,43 @@ Comprehensive error handling is implemented throughout the application:
 - Graceful handling of API failures
 - Detailed error logging
 - User-friendly error responses
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Server
+    participant Spotify
+
+    User->>Frontend: Clicks "Log in with Spotify"
+    Frontend->>Server: GET /login
+    Server->>Server: Generate state & set cookie
+    Server->>Frontend: Redirect to Spotify Auth URL
+    Frontend->>Spotify: User redirected to authorization
+    User->>Spotify: Authorizes application
+    Spotify->>Server: GET /callback?code=xxx&state=xxx
+    Server->>Server: Validate state & exchange code for tokens
+    Server->>Spotify: POST /api/token (exchange code)
+    Spotify->>Server: Return access_token & refresh_token
+    Server->>Server: Fetch user profile
+    Server->>Frontend: Redirect to /#access_token=xxx&refresh_token=xxx&uid=xxx
+    Frontend->>Frontend: Parse tokens from URL hash
+    Frontend->>Frontend: Update UI (show playlists)
+```
+
+**Flow Summary:**
+
+- **Step 1-3**: Frontend → Server (`/login`)
+- **Step 4-6**: Server → Spotify (authorization)
+- **Step 7-10**: Spotify → Server (`/callback`)
+- **Step 11-12**: Server → Frontend (with tokens)
+
+The two redirect URLs serve different purposes:
+
+- `SPOTIFY_REDIRECT_URI`: Where Spotify sends the user back to your server
+- `APP_REDIRECT_URL`: Where your server sends the user back to your frontend
 
 ## Contributing
 

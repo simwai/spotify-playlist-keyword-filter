@@ -18,15 +18,13 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
-    "concurrently": "^9.1.2",
-    "cpx2": "^8.0.0",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-json": "^4.0.1",
     "jest": "^29.7.0",
     "kill-port": "^2.0.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.0.0",
-    "rimraf": "^6.0.1",
     "stylelint": "^13.13.1",
     "stylelint-config-prettier": "^9.0.5",
     "supertest": "^7.1.1"
@@ -45,14 +43,12 @@
   },
   "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
   "scripts": {
-    "dev": "kill-port 8888 && npm run clean && concurrently \"npm run watch\" \"npm run backend\"",
-    "backend": "nodemon server.js",
-    "build": "cpx src/**/*.* dist && cpx res/**/*.* dist",
-    "watch": "cpx src/**/*.* dist --watch",
-    "format": "eslint . --fix && prettier . --write && stylelint ./src/**/*.css --fix",
+    "dev": "npm run kill && npm run backend",
+    "backend": "nodemon ./src/server.js",
+    "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
+    "kill": "kill-port 8888",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "clean": "rimraf ./dist"
+    "test:coverage": "jest --coverage"
   }
 }

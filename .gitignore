@@ -1,6 +1,7 @@
 planning
 dist
 *.sqlite
+*.old
 
 # Environment files
 .env

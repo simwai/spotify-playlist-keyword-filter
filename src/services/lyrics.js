@@ -1,15 +1,13 @@
 const needle = require('needle')
 const config = require('../config/index.js')
 const { models } = require('../database/index.js')
-const { GeniusApiClient } = require('../clients/genius-api.js')
-const { LyricsExtractor } = require('../utils/lyrics-extractor.js')
-const { CacheKeyGenerator } = require('../utils/cache-key-generator.js')
+const { generateRandomString } = require('../utils/crypto.js')
 
 class LyricsService {
-  constructor() {
-    this.geniusClient = new GeniusApiClient()
-    this.lyricsExtractor = new LyricsExtractor()
-    this.cacheKeyGenerator = new CacheKeyGenerator()
+  constructor(geniusClient, lyricsExtractor, cacheKeyGenerator) {
+    this.geniusClient = geniusClient
+    this.lyricsExtractor = lyricsExtractor
+    this.cacheKeyGenerator = cacheKeyGenerator
   }
 
   async searchSong(artist, song) {
@@ -29,7 +27,6 @@ class LyricsService {
     )
 
     const searchResult = await this._searchOnGenius(artist, song)
-
     await this._cacheSearchResult(cacheKey, artist, song, searchResult)
 
     return searchResult
@@ -130,7 +127,6 @@ class LyricsService {
         timestamp: new Date(),
       })
     } else {
-      const { generateRandomString } = require('../utils/crypto.js')
       const generatedCacheKey = `songid-${songId}-${generateRandomString(8)}`
 
       await models.LyricsCache.create({
