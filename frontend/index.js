@@ -218,7 +218,7 @@ class SpotifyPlaylistFilter {
         )
       } else {
         this.updateResultOutput(
-          `<span>✅ Loaded ${this.playlists.length} playlists. Select one to continue.</span>`
+          `<span class="pt-8">✅ Loaded ${this.playlists.length} playlists. Select one to continue.</span>`
         )
       }
 
