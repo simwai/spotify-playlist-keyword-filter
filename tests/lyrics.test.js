@@ -1,7 +1,6 @@
 const request = require('supertest')
 const express = require('express')
 
-// Mock external dependencies
 jest.mock('needle')
 const needle = require('needle')
 
@@ -12,7 +11,6 @@ describe('Lyrics Functionality', () => {
     app = express()
     app.use(express.json())
 
-    // Add the lyrics endpoints we'll create
     app.get('/api/lyrics/search', async (req, res) => {
       const { artist, song } = req.query
 
@@ -21,7 +19,6 @@ describe('Lyrics Functionality', () => {
       }
 
       try {
-        // Mock Genius search
         const searchUrl = 'https://api.genius.com/search'
         const response = await needle('get', searchUrl, {
           access_token: process.env.GENIUS_ACCESS_TOKEN || 'test_token',
@@ -43,11 +40,9 @@ describe('Lyrics Functionality', () => {
       const { songId } = req.params
 
       try {
-        // Mock lyrics scraping
         const lyricsUrl = `https://genius.com/songs/${songId}`
         const response = await needle('get', lyricsUrl)
 
-        // Simple mock lyrics extraction
         const lyrics = extractLyricsFromHTML(response.body)
 
         if (lyrics) {
@@ -112,7 +107,7 @@ describe('Lyrics Functionality', () => {
     test('should require artist and song parameters', async () => {
       const response = await request(app)
         .get('/api/lyrics/search')
-        .query({ artist: 'Test Artist' }) // missing song
+        .query({ artist: 'Test Artist' })
 
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('Artist and song are required')
@@ -172,7 +167,6 @@ describe('Lyrics Functionality', () => {
   })
 })
 
-// Mock lyrics extraction function
 function extractLyricsFromHTML(html) {
   if (html.includes('class="lyrics"')) {
     const match = html.match(/<div class="lyrics">(.*?)<\/div>/)
