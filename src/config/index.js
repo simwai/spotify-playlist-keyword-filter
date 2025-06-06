@@ -20,12 +20,7 @@ const config = {
     clientSecret: process.env.GENIUS_CLIENT_SECRET,
   },
   cors: {
-    origins: [
-      'https://simwai.github.io',
-      'http://localhost:3000',
-      'http://localhost:8888',
-      /\.vercel\.app$/,
-    ],
+    origins: [process.env.CORS_ORIGINS, 'http://localhost:8888'],
   },
   cache: {
     ttl: 24 * 60 * 60 * 1000,
