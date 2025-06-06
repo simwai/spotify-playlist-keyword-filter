@@ -47,6 +47,7 @@
   "scripts": {
     "dev": "npm run kill && npm run backend",
     "backend": "nodemon ./src/server.js",
+    "build": "npm install",
     "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
     "kill": "kill-port 8888",
     "test": "jest",

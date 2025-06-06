@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "src/server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["package.json", "package-lock.json"]
+      }
     }
   ],
   "routes": [
