@@ -281,23 +281,27 @@
   <div class="flex flex-col min-h-screen w-full">
     <!-- Improved header with proper Spotify logo and centered content -->
     <nav class="flex items-center justify-center h-16 bg-gray-900 text-white">
-      <div class="flex items-center justify-between max-w-6xl px-6">
+
+      <div class="flex max-w-6xl px-6 gap-8">
         <a href="index.html" class="flex items-center h-full">
-          <div class="h-8 w-8 flex-shrink-0">
-            <!-- Spotify-style logo -->
-            <svg viewBox="0 0 24 24" class="w-8 h-8" style="color: var(--spotify-green)">
+          <div class="h-8 w-8 flex-shrink-0" style="height: 32px; width: 32px; flex-shrink: 0;">
+            <!-- Spotify-style logo with inline size constraints -->
+            <svg viewBox="0 0 24 24" class="w-8 h-8" style="color: var(--spotify-green); width: 32px; height: 32px; max-width: 32px; max-height: 32px;">
               <path fill="currentColor"
                 d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.239.479.66.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
             </svg>
           </div>
-          <span class="ml-2 font-medium text-lg text-white">Playlist Filter</span>
         </a>
-        <button type="button" id="back-to-playlists-button"
-          class="hidden px-4 py-2 h-10 text-sm bg-gray-800 border border-gray-700 rounded-md text-white hover:bg-gray-700 flex-shrink-0 transition-all">
-          <i class="fas fa-arrow-left mr-2"></i> Back to Playlists
-        </button>
       </div>
+
+
     </nav>
+
+    <div class="flex justify-center pt-4">
+      <button type="button" id="back-to-playlists-button" class="hidden px-4 py-2 h-10 text-sm bg-gray-800 border border-gray-700 rounded-md text-white hover:bg-gray-700 flex-shrink-0 transition-all">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Playlists
+      </button>
+    </div>
 
     <!-- Content area -->
     <div class="flex flex-col flex-1 px-6 py-8 gap-8">
@@ -349,7 +353,7 @@
 
           <!-- Filter mode container -->
           <div class="flex flex-col gap-4">
-            <h3 class="font-bold text-center">Filter Mode</h3>
+            <h2 class="font-bold text-center">Filter Mode</h2>
             <div class="flex flex-col sm:flex-row justify-center gap-18 pl-12 pr-12">
               <label class="filter-mode-label flex flex-col items-center sm:w-1/2 cursor-pointer">
                 <input type="radio" name="filter-mode" value="exclude" checked class="sr-only" />
@@ -364,7 +368,7 @@
                 <span class="mode-option include-mode flex flex-col items-center gap-2 border border-gray-200">
                   <i class="fas fa-check-circle text-2xl" style="color: var(--spotify-green)"></i>
                   <strong class="text-gray-800">Include</strong>
-                  <small class="text-gray-600">Keep only songs containing these keywords</small>
+                  <small class="text-gray-600">Keep songs containing these keywords</small>
                 </span>
               </label>
             </div>
