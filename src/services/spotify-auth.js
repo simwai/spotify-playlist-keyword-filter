@@ -24,7 +24,7 @@ class SpotifyAuthService {
     res.cookie(this.stateKey, state, {
       httpOnly: true,
       secure: config.app.isProduction,
-      sameSite: 'lax',
+      sameSite: config.app.isProduction ? 'none' : 'lax',
       maxAge: 10 * 60 * 1000,
       path: '/',
     })
