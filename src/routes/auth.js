@@ -7,7 +7,7 @@ module.exports = (container) => {
   const spotifyAuth = container.get(TYPES.SpotifyAuthService)
 
   const buildErrorRedirect = (errorMessage) => {
-    const baseUrl = config.spotify.redirectUri || 'http://localhost:8888'
+    const baseUrl = config.spotify.redirectUri
 
     return `${baseUrl}/#error=${encodeURIComponent(errorMessage)}`
   }
