@@ -245,7 +245,7 @@ class SpotifyAuthService {
   }
 
   _buildRedirectUrl(tokens) {
-    const baseUrl = config.app.redirectUrl || 'http://localhost:8888'
+    const baseUrl = config.spotify.redirectUri || 'http://localhost:8888'
 
     const params = {
       access_token: tokens.access_token,

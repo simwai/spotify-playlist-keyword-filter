@@ -7,7 +7,6 @@ validateConfig()
 const config = {
   app: {
     port: process.env.PORT || 8888,
-    redirectUrl: process.env.APP_REDIRECT_URL || 'http://localhost:8888',
     isProduction: process.env.NODE_ENV === 'production',
   },
   spotify: {
