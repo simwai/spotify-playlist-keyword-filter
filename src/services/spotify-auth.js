@@ -21,13 +21,21 @@ class SpotifyAuthService {
     const state = generateRandomString(16)
     this._debugLog('🔐 Generated state:', state)
 
-    res.cookie(this.stateKey, state, {
+    const cookieOptions = {
       httpOnly: true,
       secure: config.app.isProduction,
-      sameSite: config.app.isProduction ? 'none' : 'lax',
+      sameSite: config.app.isProduction ? 'none' : 'lax', // Important for cross-domain
       maxAge: 10 * 60 * 1000,
       path: '/',
-    })
+    }
+
+    // eslint-disable-next-line node/no-unsupported-features/node-builtins
+    const url = new URL(config.spotify.redirectUri)
+    if (!url.hostname.includes('localhost')) {
+      cookieOptions.domain = url.hostname
+    }
+
+    res.cookie(this.stateKey, state, cookieOptions)
 
     this._debugLog(
       '🍪 Set cookie with key:',
