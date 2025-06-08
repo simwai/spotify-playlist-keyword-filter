@@ -9,7 +9,6 @@ const { setupContainer } = require('./container/index.js')
 const config = require('./config/index.js')
 const { initDatabase } = require('./database/index.js')
 
-// Setup Express app
 const container = setupContainer()
 const app = express()
 
@@ -19,13 +18,14 @@ setupRoutes(app, container)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Start server
 const startServer = async () => {
   try {
     await initDatabase()
 
     const server = app.listen(config.app.port, () => {
-      console.log(`🚀 Server running on http://localhost:${config.app.port}`)
+      console.log(
+        `🚀 Server running on ${config.app.frontendUrl}:${config.app.port}`
+      )
     })
 
     const gracefulShutdown = (signal) => {

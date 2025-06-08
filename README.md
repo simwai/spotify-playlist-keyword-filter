@@ -189,7 +189,7 @@ sequenceDiagram
 The two redirect URLs serve different purposes:
 
 - `SPOTIFY_REDIRECT_URI`: Where Spotify sends the user back to your server
-- `APP_REDIRECT_URL`: Where your server sends the user back to your frontend
+- `FRONTEND_URL`: Where your server sends the user back to your frontend
 
 ## Contributing
 
