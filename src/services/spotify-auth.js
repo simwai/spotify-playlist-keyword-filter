@@ -21,13 +21,15 @@ class SpotifyAuthService {
     const state = generateRandomString(16)
     this._debugLog('🔐 Generated state:', state)
 
-    res.cookie(this.stateKey, state, {
+    const cookieOptions = {
       httpOnly: true,
       secure: config.app.isProduction,
       sameSite: 'lax',
       maxAge: 10 * 60 * 1000,
       path: '/',
-    })
+    }
+
+    res.cookie(this.stateKey, state, cookieOptions)
 
     this._debugLog(
       '🍪 Set cookie with key:',
@@ -62,8 +64,6 @@ class SpotifyAuthService {
     this._debugLog('  - All cookies:', req.cookies)
     this._debugLog('  - Query params:', req.query)
 
-    res.clearCookie(this.stateKey)
-
     if (error) {
       console.error('Spotify authorization error:', error)
       throw new Error('Authorization denied by Spotify')
@@ -79,6 +79,8 @@ class SpotifyAuthService {
       console.error('No authorization code received')
       throw new Error('Authorization code missing')
     }
+
+    res.clearCookie(this.stateKey)
 
     try {
       const tokens = await this._exchangeCodeForTokens(code)
@@ -245,7 +247,7 @@ class SpotifyAuthService {
   }
 
   _buildRedirectUrl(tokens) {
-    const baseUrl = config.spotify.redirectUri || 'http://localhost:8888'
+    const baseUrl = config.app.frontendUrl || 'http://localhost:8888'
 
     const params = {
       access_token: tokens.access_token,

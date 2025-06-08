@@ -8,6 +8,7 @@ const config = {
   app: {
     port: process.env.PORT || 8888,
     isProduction: process.env.NODE_ENV === 'production',
+    frontendUrl: process.env.APP_REDIRECT_URL || 'http://localhost:8888',
   },
   spotify: {
     clientId: process.env.SPOTIFY_CLIENT_ID,
