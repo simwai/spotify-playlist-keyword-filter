@@ -7,6 +7,7 @@
     "mikestead.dotenv",
     "davidanson.vscode-markdownlint",
     "christian-kohler.path-intellisense",
-    "antfu.unocss"
+    "antfu.unocss",
+    "stylelint.vscode-stylelint"
   ]
 }

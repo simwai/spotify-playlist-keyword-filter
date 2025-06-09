@@ -81,17 +81,18 @@ class SpotifyPlaylistFilter {
       'back-to-playlists-button',
     ]
 
-    sections.forEach((sectionId) => {
+    for (const sectionId of sections) {
       const element = document.getElementById(sectionId)
       if (element) {
         element.classList.add('hidden')
       }
-    })
+    }
 
     if (view !== 'tag-form') {
-      document.querySelectorAll('#playlists tbody tr').forEach((row) => {
+      const playlistRows = document.querySelectorAll('#playlists tbody tr')
+      for (const row of playlistRows) {
         row.classList.remove('selected')
-      })
+      }
     }
 
     switch (view) {
@@ -142,12 +143,12 @@ class SpotifyPlaylistFilter {
     const filterModeInputs = document.querySelectorAll(
       'input[name="filter-mode"]'
     )
-    filterModeInputs.forEach((input) => {
+    for (const input of filterModeInputs) {
       input.addEventListener('change', (event) => {
         this.filterMode = event.target.value
         this.renderKeywords()
       })
-    })
+    }
 
     const backButton = document.getElementById('back-to-playlists-button')
     backButton?.addEventListener('click', () => {
@@ -236,11 +237,11 @@ class SpotifyPlaylistFilter {
       this.tableSort = new Tablesort(table)
 
       const headers = table.querySelectorAll('th[role="columnheader"]')
-      headers.forEach((header) => {
+      for (const header of headers) {
         if (!header.hasAttribute('title')) {
           header.setAttribute('title', 'Click to sort')
         }
-      })
+      }
     }
   }
 
@@ -259,7 +260,7 @@ class SpotifyPlaylistFilter {
       return
     }
 
-    this.playlists.forEach((playlist) => {
+    for (const playlist of this.playlists) {
       const row = document.createElement('tr')
 
       row.className = 'hover:bg-gray-50 cursor-pointer transition-colors'
@@ -276,15 +277,16 @@ class SpotifyPlaylistFilter {
 
       row.addEventListener('click', () => this.selectPlaylist(playlist, row))
       playlistsTable.appendChild(row)
-    })
+    }
   }
 
   selectPlaylist(playlist, rowElement) {
-    document
-      .querySelectorAll('#playlists tbody tr.selected')
-      .forEach((activeRow) => {
-        activeRow.classList.remove('selected')
-      })
+    const selectedPlaylistRows = document.querySelectorAll(
+      '#playlists tbody tr.selected'
+    )
+    for (const activeRow of selectedPlaylistRows) {
+      activeRow.classList.remove('selected')
+    }
 
     this.selectedPlaylist = playlist
     rowElement.classList.add('selected')
@@ -670,11 +672,11 @@ class SpotifyPlaylistFilter {
             console.warn(
               `⚠️ Found ${invalidUriTracks.length} tracks with invalid URIs in fetch batch ${batchCount}:`
             )
-            invalidUriTracks.forEach((trackItem) => {
+            for (const trackItem of invalidUriTracks) {
               console.warn(
                 `  → "${trackItem.track.name}" by ${trackItem.track.artists[0].name}: ${trackItem.track.uri}`
               )
-            })
+            }
           }
 
           totalFetched += validTracks.length
@@ -871,11 +873,11 @@ class SpotifyPlaylistFilter {
     })
 
     const results = await Promise.all(trackPromises)
-    results.forEach((track) => {
+    for (const track of results) {
       if (track) {
         tracksToKeep.push(track)
       }
-    })
+    }
 
     console.log(
       `✅ Batch ${batchNumber} completed - Kept: ${tracksToKeep.length}, Filtered out: ${filteredOutCountInBatch}`
@@ -946,13 +948,17 @@ class SpotifyPlaylistFilter {
       const invalidUris = batch.filter((uri) => !this._isValidSpotifyUri(uri))
       if (invalidUris.length > 0) {
         console.error(
-          `❌ Batch ${batchNumber} contains ${invalidUris.length} invalid URIs:`,
+          `❌ Batch ${batchNumber} contains ${invalidUris.length} invalid URIs according to client-side check:`,
           invalidUris
         )
         this.showError(
           `Batch ${batchNumber} contains invalid track URIs. Skipping this batch.`
         )
         continue
+      } else {
+        console.log(
+          `✅ Client-side validation passed for batch ${batchNumber}.`
+        )
       }
 
       this.updateResultOutput(
@@ -960,7 +966,7 @@ class SpotifyPlaylistFilter {
       )
 
       try {
-        await this._spotifyApiPost(`/playlist/${playlistId}/tracks`, {
+        await this._spotifyApiPost(`/playlists/${playlistId}/tracks`, {
           uris: batch,
         })
         console.log(
@@ -973,11 +979,16 @@ class SpotifyPlaylistFilter {
         )
         console.error(`❌ Problematic batch URIs:`, batch)
 
-        console.log(`🔍 Testing URIs individually in batch ${batchNumber}...`)
         for (let j = 0; j < batch.length; j++) {
           const uri = batch[j]
           if (!this._isValidSpotifyUri(uri)) {
-            console.error(`❌ Invalid URI found at position ${j}:`, uri)
+            console.error(
+              `❌ Invalid URI found at position ${j} during post-error check:`,
+              uri
+            )
+          } else {
+            // Maybe add a check for non-printable characters or unexpected formats?
+            // console.log(`✅ URI at position ${j} seems valid by regex:`, uri);
           }
         }
 
@@ -1018,10 +1029,17 @@ class SpotifyPlaylistFilter {
         console.warn(
           `  → Track ID "${trackId}" has length ${trackId.length} (expected 22)`
         )
-        console.warn(
-          `  → Track ID characters:`,
-          trackId.split('').map((c) => `${c}(${c.charCodeAt(0)})`)
-        )
+
+        // Check for characters outside the expected base62 set
+        const invalidChars = trackId
+          .split('')
+          .filter((c) => !/[A-Za-z0-9]/.test(c))
+        if (invalidChars.length > 0) {
+          console.warn(
+            `  → Track ID contains invalid characters:`,
+            invalidChars
+          )
+        }
       }
     }
 
