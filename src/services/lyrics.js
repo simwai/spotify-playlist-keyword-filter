@@ -2,6 +2,7 @@ const needle = require('needle')
 const config = require('../config/index.js')
 const { models } = require('../database/index.js')
 const { generateRandomString } = require('../utils/crypto.js')
+const { Sequelize } = require('sequelize')
 
 class LyricsService {
   constructor(geniusClient, lyricsExtractor, cacheKeyGenerator) {
@@ -34,28 +35,43 @@ class LyricsService {
       )
 
       const chunkPromises = chunkBatch.map(async (chunk, index) => {
-        const chunkResults = await models.LyricsCache.findAll({
-          where: {
-            cacheKey: { [Sequelize.Op.in]: chunk },
-          },
-          raw: true,
-        })
+        try {
+          const chunkResults = await models.LyricsCache.findAll({
+            where: {
+              cacheKey: { [Sequelize.Op.in]: chunk },
+            },
+            raw: true,
+          })
 
-        console.log(
-          `✅ Chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached results`
-        )
-        return chunkResults
-      })
-
-      const chunkResults = await Promise.all(chunkPromises)
-
-      chunkResults.flat().forEach((result) => {
-        const isExpired =
-          Date.now() - new Date(result.timestamp).getTime() > config.cache.ttl
-        if (!isExpired) {
-          cacheMap.set(result.cacheKey, result)
+          console.log(
+            `✅ Chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached results`
+          )
+          return chunkResults
+        } catch (error) {
+          console.error(
+            `❌ Error fetching cache chunk ${i + index + 1}:`,
+            error
+          )
+          throw error
         }
       })
+
+      const chunkResults = await Promise.allSettled(chunkPromises)
+
+      for (const settledResult of chunkResults) {
+        if (settledResult.status !== 'fulfilled') {
+          console.warn('Chunk promise rejected:', settledResult.reason)
+          continue
+        }
+
+        for (const result of settledResult.value) {
+          const isExpired =
+            Date.now() - new Date(result.timestamp).getTime() > config.cache.ttl
+          if (!isExpired) {
+            cacheMap.set(result.cacheKey, result)
+          }
+        }
+      }
     }
 
     return trackRequests.map(({ artist, song }) => {
@@ -76,7 +92,6 @@ class LyricsService {
       `🔍 Parallel bulk lyrics cache lookup for ${songIds.length} song IDs`
     )
 
-    const { Sequelize } = require('sequelize')
     const chunks = this._chunkArray(songIds, chunkSize)
     const lyricsMap = new Map()
 
@@ -105,11 +120,13 @@ class LyricsService {
         return chunkResults
       })
 
-      const chunkResults = await Promise.all(chunkPromises)
-
-      chunkResults.flat().forEach((result) => {
+      const chunkResults = await Promise.allSettled(chunkPromises)
+      const successfulResults = chunkResults
+        .filter((result) => result.status === 'fulfilled')
+        .flatMap((result) => result.value)
+      for (const result of successfulResults) {
         lyricsMap.set(result.songId, result.lyrics)
-      })
+      }
     }
 
     return songIds.map((songId) => ({
@@ -243,8 +260,13 @@ class LyricsService {
         return null
       })
 
-      const chunkResults = await Promise.all(chunkPromises)
-      results.push(...chunkResults.filter((result) => result !== null))
+      const chunkResults = await Promise.allSettled(chunkPromises)
+      const successfulResults = chunkResults
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+        .filter((result) => result !== null)
+
+      results.push(...successfulResults)
 
       if (i + parallelLimit < uncachedTracks.length) {
         await new Promise((resolve) => setTimeout(resolve, 100))

@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Filter Spotify playlists by removing songs with specific keywords in lyrics",
   "main": "server.js",
+  "engines": {
+    "node": ">=13.0.0"
+  },
   "dependencies": {
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
