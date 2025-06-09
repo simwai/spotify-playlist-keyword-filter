@@ -18,13 +18,17 @@ setupRoutes(app, container)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
+const _removePortInUrl = (url) => {
+  return url.replace(/:\d+/, '')
+}
+
 const startServer = async () => {
   try {
     await initDatabase()
 
     const server = app.listen(config.app.port, () => {
       console.log(
-        `🚀 Server running on ${config.app.frontendUrl}:${config.app.port}`
+        `🚀 Server running on ${_removePortInUrl(config.app.frontendUrl)}:${config.app.port}`
       )
     })
 
