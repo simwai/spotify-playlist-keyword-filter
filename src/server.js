@@ -19,25 +19,13 @@ setupRoutes(app, container)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Start server
 const startServer = async () => {
   try {
     await initDatabase()
 
-    const server = app.listen(config.app.port, () => {
+    app.listen(config.app.port, () => {
       console.log(`🚀 Server running on http://localhost:${config.app.port}`)
     })
-
-    const gracefulShutdown = (signal) => {
-      console.log(`\n${signal} received. Shutting down gracefully...`)
-      server.close(() => {
-        console.log('✅ HTTP server closed')
-        throw new Error('Server shutdown')
-      })
-    }
-
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'))
   } catch (error) {
     console.error('💥 Failed to start server:', error)
   }
