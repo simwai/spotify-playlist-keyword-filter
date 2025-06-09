@@ -10,9 +10,7 @@
         "NODE_ENV": "development"
       },
       "console": "integratedTerminal",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "outputCapture": "std"
     },
     {
@@ -31,10 +29,7 @@
   "compounds": [
     {
       "name": "Server/Client",
-      "configurations": [
-        "Server",
-        "Client"
-      ],
+      "configurations": ["Server", "Client"],
       "preLaunchTask": "npm: kill",
       "stopAll": true,
       "presentation": {

@@ -84,7 +84,6 @@ class SpotifyPlaylistFilter {
     sections.forEach((sectionId) => {
       const element = document.getElementById(sectionId)
       if (element) {
-        // Use UnoCSS hidden class instead of display: none
         element.classList.add('hidden')
       }
     })
@@ -146,7 +145,6 @@ class SpotifyPlaylistFilter {
     filterModeInputs.forEach((input) => {
       input.addEventListener('change', (event) => {
         this.filterMode = event.target.value
-        // Update all tags with the new mode styling
         this.renderKeywords()
       })
     })
@@ -222,7 +220,6 @@ class SpotifyPlaylistFilter {
         )
       }
 
-      // Initialize table sorting after playlists are rendered
       this.initTableSort()
     } catch (error) {
       console.error('Error loading playlists:', error)
@@ -230,7 +227,6 @@ class SpotifyPlaylistFilter {
     }
   }
 
-  // Initialize table sorting
   initTableSort() {
     const table = document.getElementById('playlists')
     if (table) {
@@ -239,7 +235,6 @@ class SpotifyPlaylistFilter {
       }
       this.tableSort = new Tablesort(table)
 
-      // Add sortable indicator tooltip
       const headers = table.querySelectorAll('th[role="columnheader"]')
       headers.forEach((header) => {
         if (!header.hasAttribute('title')) {
@@ -274,7 +269,6 @@ class SpotifyPlaylistFilter {
           ? playlist.tracks.total
           : 'N/A'
 
-      // Make the track count data-value an actual number for sorting
       row.innerHTML = `
         <td class="p-4 border-b border-gray-200">${playlistName}</td>
         <td class="p-4 border-b border-gray-200" data-sort="${typeof trackTotal === 'number' ? trackTotal : -1}">${trackTotal}</td>
@@ -310,7 +304,6 @@ class SpotifyPlaylistFilter {
       this.renderKeywords()
       tagInput.value = ''
 
-      // Use class manipulation instead of style
       const startButton = document.getElementById('start-button')
       if (startButton) {
         if (this.keywords.length > 0) {
@@ -334,14 +327,12 @@ class SpotifyPlaylistFilter {
     this.keywords.forEach((keyword, index) => {
       const tag = document.createElement('span')
 
-      // Consistent styling for tags with proper spacing and using the Spotify theme colors
       tag.className = `tag flex items-center px-3 py-2 rounded-full m-1 ${
         this.filterMode === 'exclude'
           ? 'bg-red-100 text-red-800 border border-red-200'
           : 'bg-green-100 text-green-800 border border-green-200'
       } transition-all hover:shadow-sm`
 
-      // Add an appropriate icon based on filter mode
       const iconSpan = document.createElement('span')
       iconSpan.className = 'mr-2 flex items-center justify-center'
       iconSpan.innerHTML =
@@ -358,7 +349,6 @@ class SpotifyPlaylistFilter {
       removeLink.innerHTML = '&times;'
       removeLink.href = '#'
 
-      // Consistent styling for remove button
       removeLink.className =
         'remove-tag inline-flex items-center justify-center ml-2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors'
       removeLink.setAttribute('aria-label', `Remove keyword ${keyword}`)
@@ -375,16 +365,13 @@ class SpotifyPlaylistFilter {
   }
 
   removeKeyword(index) {
-    // Get the tag element before removing from array
     const tagsContainer = document.getElementById('tags')
     const tagElements = tagsContainer.querySelectorAll('.tag')
     const tagToRemove = tagElements[index]
 
-    // Add animation class
     if (tagToRemove) {
       tagToRemove.classList.add('removing')
 
-      // Wait for animation to complete before removing
       setTimeout(() => {
         this.keywords.splice(index, 1)
         this.renderKeywords()
@@ -399,7 +386,6 @@ class SpotifyPlaylistFilter {
         }
       }, 300)
     } else {
-      // Fallback if element not found
       this.keywords.splice(index, 1)
       this.renderKeywords()
     }
@@ -416,7 +402,6 @@ class SpotifyPlaylistFilter {
       startButton.classList.add('opacity-70')
     }
 
-    // Updated spinner with consistent styling using Spotify green
     this.updateResultOutput(
       `<div class="flex items-center justify-center py-4 gap-3">
         <div class="inline-flex items-center justify-center w-6 h-6 border-2 border-t-transparent border-spotify-green rounded-full animate-spin" role="status"></div>
@@ -478,15 +463,37 @@ class SpotifyPlaylistFilter {
       if (allTracksToKeep.length > 0) {
         const newPlaylist = await this._createFilteredPlaylist()
         if (newPlaylist && newPlaylist.id) {
-          const trackUrisToKeep = allTracksToKeep.map((track) => track.uri)
-          await this._addTracksToSpotifyPlaylist(
-            newPlaylist.id,
-            trackUrisToKeep
+          const trackUrisToKeep = allTracksToKeep
+            .map((track) => track.uri)
+            .filter((uri) => this._isValidSpotifyUri(uri))
+
+          console.log(
+            `📊 Track URI validation: ${allTracksToKeep.length} tracks -> ${trackUrisToKeep.length} valid URIs`
           )
-          this.showSuccess(
-            `✅ Filtering complete! New playlist "${newPlaylist.name}" created with ${allTracksToKeep.length} tracks. ${totalFilteredOutCount} tracks were filtered out.` +
-              ` <a href="${newPlaylist.external_urls.spotify}" target="_blank" class="text-spotify-green hover:underline">Open Playlist</a>`
-          )
+
+          if (trackUrisToKeep.length > 0) {
+            await this._addTracksToSpotifyPlaylist(
+              newPlaylist.id,
+              trackUrisToKeep
+            )
+            const invalidUriCount =
+              allTracksToKeep.length - trackUrisToKeep.length
+            const successMessage = `✅ Filtering complete! New playlist "${newPlaylist.name}" created with ${trackUrisToKeep.length} tracks. ${totalFilteredOutCount} tracks were filtered out.`
+            const invalidUriMessage =
+              invalidUriCount > 0
+                ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)`
+                : ''
+
+            this.showSuccess(
+              successMessage +
+                invalidUriMessage +
+                ` <a href="${newPlaylist.external_urls.spotify}" target="_blank" class="text-spotify-green hover:underline">Open Playlist</a>`
+            )
+          } else {
+            this.showError(
+              'No valid track URIs found. Unable to create playlist.'
+            )
+          }
         }
       } else {
         this.showSuccess(
@@ -655,6 +662,21 @@ class SpotifyPlaylistFilter {
               item.track.name &&
               item.track.uri
           )
+
+          const invalidUriTracks = validTracks.filter(
+            (trackItem) => !this._isValidSpotifyUri(trackItem.track.uri)
+          )
+          if (invalidUriTracks.length > 0) {
+            console.warn(
+              `⚠️ Found ${invalidUriTracks.length} tracks with invalid URIs in fetch batch ${batchCount}:`
+            )
+            invalidUriTracks.forEach((trackItem) => {
+              console.warn(
+                `  → "${trackItem.track.name}" by ${trackItem.track.artists[0].name}: ${trackItem.track.uri}`
+              )
+            })
+          }
+
           totalFetched += validTracks.length
           console.log(
             `✅ Batch ${batchCount}: Got ${validTracks.length} valid tracks (total: ${totalFetched})`
@@ -681,7 +703,6 @@ class SpotifyPlaylistFilter {
         }
       } catch (error) {
         console.error(`❌ Error fetching tracks batch ${batchCount}:`, error)
-        console.error(`❌ Error fetching tracks batch ${batchCount}:`, error)
         this.showError(`Error fetching playlist tracks: ${error.message}`)
         throw error
       }
@@ -689,6 +710,107 @@ class SpotifyPlaylistFilter {
   }
 
   async _processTrackBatch(trackBatch, batchNumber) {
+    console.log(
+      `🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks with bulk API`
+    )
+
+    try {
+      const apiBaseUrl = window.location.origin
+      const response = await fetch(`${apiBaseUrl}/api/lyrics/bulk-process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tracks: trackBatch.map((track) => ({
+            name: track.name,
+            artists: track.artists,
+            uri: track.uri,
+            id: track.id,
+          })),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Bulk processing failed: ${response.status}`)
+      }
+
+      const bulkResult = await response.json()
+      console.log(
+        `✅ Bulk processing completed: ${bulkResult.results} results from ${bulkResult.processed} tracks`
+      )
+
+      const tracksToKeep = []
+      let filteredOutCountInBatch = 0
+
+      for (const result of bulkResult.data) {
+        const { track, lyrics } = result
+
+        if (!lyrics) {
+          console.log(
+            `🚫 Lyrics not found for "${track.name}" by ${track.artists[0].name}. Skipping track.`
+          )
+          filteredOutCountInBatch++
+          continue
+        }
+
+        const lowerCaseLyrics = lyrics.toLowerCase()
+        let matchesKeyword = false
+        for (const keyword of this.keywords) {
+          if (lowerCaseLyrics.includes(keyword.toLowerCase())) {
+            matchesKeyword = true
+            break
+          }
+        }
+
+        if (this.filterMode === 'exclude') {
+          if (matchesKeyword) {
+            console.log(
+              `🚫 EXCLUDE mode: Filtering out "${track.name}" by ${track.artists[0].name} (matches keyword).`
+            )
+            filteredOutCountInBatch++
+          } else {
+            console.log(
+              `✅ EXCLUDE mode: Keeping "${track.name}" by ${track.artists[0].name}.`
+            )
+            tracksToKeep.push(track)
+          }
+        } else if (matchesKeyword) {
+          console.log(
+            `✅ INCLUDE mode: Keeping "${track.name}" by ${track.artists[0].name} (matches keyword).`
+          )
+          tracksToKeep.push(track)
+        } else {
+          console.log(
+            `🚫 INCLUDE mode: Filtering out "${track.name}" by ${track.artists[0].name} (no keyword match).`
+          )
+          filteredOutCountInBatch++
+        }
+      }
+
+      const processedTrackIds = new Set(bulkResult.data.map((r) => r.track.id))
+      const unprocessedTracks = trackBatch.filter(
+        (track) => !processedTrackIds.has(track.id)
+      )
+      filteredOutCountInBatch += unprocessedTracks.length
+
+      console.log(
+        `✅ Batch ${batchNumber} completed - Kept: ${tracksToKeep.length}, Filtered out: ${filteredOutCountInBatch}`
+      )
+      return { tracksToKeep, filteredOutCountInBatch }
+    } catch (error) {
+      console.error(
+        `❌ Bulk processing failed for batch ${batchNumber}:`,
+        error
+      )
+      console.log(
+        `🔄 Falling back to individual processing for batch ${batchNumber}`
+      )
+      return this._processTrackBatchIndividual(trackBatch, batchNumber)
+    }
+  }
+
+  async _processTrackBatchIndividual(trackBatch, batchNumber) {
     console.log(
       `🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks`
     )
@@ -767,19 +889,19 @@ class SpotifyPlaylistFilter {
         'Cannot create playlist without selected playlist or user ID.'
       )
     }
+
     const newPlaylistName = `${this.selectedPlaylist.name}`
     this.updateResultOutput(
       `<span>📝 Creating new playlist: "${newPlaylistName}"...</span>`
     )
+
     try {
-      const playlistData = await this._spotifyApiPost(
-        `/users/${this.userId}/playlists`,
-        {
-          name: newPlaylistName,
-          public: false,
-          description: `Filtered based on keywords: ${this.keywords.join(', ')} (Mode: ${this.filterMode})`,
-        }
-      )
+      const playlistData = await this._spotifyApiPost('/playlist', {
+        userId: this.userId,
+        name: newPlaylistName,
+        description: `Filtered based on keywords: ${this.keywords.join(', ')} (Mode: ${this.filterMode})`,
+        public: false,
+      })
       console.log(
         '🎉 New playlist created:',
         playlistData.name,
@@ -814,15 +936,31 @@ class SpotifyPlaylistFilter {
       const batch = trackUris.slice(i, i + BATCH_SIZE)
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1
       const totalBatches = Math.ceil(trackUris.length / BATCH_SIZE)
+
       console.log(
         `📤 Sending batch ${batchNumber}/${totalBatches} (${batch.length} tracks)...`
       )
+
+      console.log(`🔍 First 3 URIs in batch ${batchNumber}:`, batch.slice(0, 3))
+
+      const invalidUris = batch.filter((uri) => !this._isValidSpotifyUri(uri))
+      if (invalidUris.length > 0) {
+        console.error(
+          `❌ Batch ${batchNumber} contains ${invalidUris.length} invalid URIs:`,
+          invalidUris
+        )
+        this.showError(
+          `Batch ${batchNumber} contains invalid track URIs. Skipping this batch.`
+        )
+        continue
+      }
+
       this.updateResultOutput(
         `<span>📤 Adding batch ${batchNumber}/${totalBatches} of tracks...</span>`
       )
 
       try {
-        await this._spotifyApiPost(`/playlists/${playlistId}/tracks`, {
+        await this._spotifyApiPost(`/playlist/${playlistId}/tracks`, {
           uris: batch,
         })
         console.log(
@@ -833,6 +971,16 @@ class SpotifyPlaylistFilter {
           `❌ Failed to add batch ${batchNumber}/${totalBatches}:`,
           error
         )
+        console.error(`❌ Problematic batch URIs:`, batch)
+
+        console.log(`🔍 Testing URIs individually in batch ${batchNumber}...`)
+        for (let j = 0; j < batch.length; j++) {
+          const uri = batch[j]
+          if (!this._isValidSpotifyUri(uri)) {
+            console.error(`❌ Invalid URI found at position ${j}:`, uri)
+          }
+        }
+
         this.showError(
           `Failed to add tracks (batch ${batchNumber}) to playlist: ${error.message}`
         )
@@ -850,9 +998,37 @@ class SpotifyPlaylistFilter {
       resultOutput.innerHTML = htmlContent
     }
   }
+
+  _isValidSpotifyUri(uri) {
+    if (!uri || typeof uri !== 'string') {
+      console.warn('❌ Invalid URI: not a string or null/undefined:', uri)
+      return false
+    }
+
+    const spotifyUriPattern = /^spotify:track:[A-Za-z0-9]{22}$/
+    const isValid = spotifyUriPattern.test(uri)
+
+    if (!isValid) {
+      console.warn('❌ Invalid Spotify URI format:', uri)
+      if (!uri.startsWith('spotify:track:')) {
+        console.warn('  → URI does not start with "spotify:track:"')
+      } else {
+        const trackId = uri.replace('spotify:track:', '')
+
+        console.warn(
+          `  → Track ID "${trackId}" has length ${trackId.length} (expected 22)`
+        )
+        console.warn(
+          `  → Track ID characters:`,
+          trackId.split('').map((c) => `${c}(${c.charCodeAt(0)})`)
+        )
+      }
+    }
+
+    return isValid
+  }
 }
 
-// Initialize the application when the document is ready
 document.addEventListener('DOMContentLoaded', function () {
   new SpotifyPlaylistFilter()
 })
