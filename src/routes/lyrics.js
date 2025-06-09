@@ -1,22 +1,7 @@
 const express = require('express')
-const { TYPES } = require('../types.js')
 
 module.exports = (container) => {
-  if (!container) {
-    throw new Error('Container is required for lyrics routes')
-  }
-
   const router = express.Router()
-  let lyricsService
-  try {
-    console.log('🔍 Resolving LyricsService from container...')
-    lyricsService = container.get(TYPES.LyricsService)
-    console.log('✅ LyricsService resolved successfully')
-  } catch (error) {
-    console.error('❌ Failed to resolve LyricsService:', error.message)
-    console.log('📋 Available services:', container.listServices())
-    throw new Error(`Route initialization failed: ${error.message}`)
-  }
 
   router.get('/search', async (req, res) => {
     try {
@@ -24,43 +9,90 @@ module.exports = (container) => {
 
       if (!artist || !song) {
         return res.status(400).json({
-          error: 'Artist and song parameters are required',
-          received: { artist, song },
+          error: 'Both artist and song parameters are required',
         })
       }
 
-      const searchResult = await lyricsService.searchSong(artist, song)
-      res.json(searchResult)
+      const lyricsService =
+        container.lyricsService || container.get('LyricsService')
+
+      if (!lyricsService) {
+        return res.status(503).json({
+          error: 'Lyrics service not available',
+        })
+      }
+
+      const result = await lyricsService.searchSong(artist, song)
+
+      if (result) {
+        res.json({ found: true, songId: result.id })
+      } else {
+        res.json({ found: false })
+      }
     } catch (error) {
-      console.error('❌ Search error:', error)
-      res.status(500).json({
-        error: 'Failed to search for song',
-        details: error.message,
-      })
+      console.error('Error searching lyrics:', error)
+      res.status(500).json({ error: error.message })
     }
   })
 
   router.get('/:songId', async (req, res) => {
     try {
       const { songId } = req.params
-      if (!songId) {
-        return res.status(400).json({ error: 'Song ID is required' })
+
+      const lyricsService =
+        container.lyricsService || container.get('LyricsService')
+
+      if (!lyricsService) {
+        return res.status(503).json({
+          error: 'Lyrics service not available',
+        })
       }
 
-      const lyricsResult = await lyricsService.getLyrics(songId)
+      const lyrics = await lyricsService.getLyrics(songId)
 
-      if (!lyricsResult) {
-        return res
-          .status(404)
-          .json({ error: 'Lyrics not found for the given song ID' })
+      if (lyrics) {
+        res.json({ lyrics })
+      } else {
+        res.status(404).json({ error: 'Lyrics not found' })
       }
-      res.json(lyricsResult)
     } catch (error) {
-      console.error('❌ Lyrics fetch error:', error)
-      res.status(500).json({
-        error: 'Failed to fetch lyrics',
-        details: error.message,
+      console.error('Error fetching lyrics:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  router.post('/bulk-process', async (req, res) => {
+    try {
+      const { tracks } = req.body
+
+      if (!tracks || !Array.isArray(tracks)) {
+        return res.status(400).json({
+          error: 'Tracks array required',
+        })
+      }
+
+      const lyricsService =
+        container.lyricsService || container.get('LyricsService')
+
+      if (!lyricsService) {
+        return res.status(503).json({
+          error: 'Lyrics service not available',
+        })
+      }
+      const results = await lyricsService.processTracksBatch(tracks)
+
+      res.json({
+        processed: tracks.length,
+        results: results.length,
+        data: results.map((result) => ({
+          track: result.track,
+
+          lyrics: result.lyrics,
+        })),
       })
+    } catch (error) {
+      console.error('Error in bulk processing:', error)
+      res.status(500).json({ error: error.message })
     }
   })
 

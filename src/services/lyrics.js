@@ -10,6 +10,250 @@ class LyricsService {
     this.cacheKeyGenerator = cacheKeyGenerator
   }
 
+  async getBulkCachedResults(trackRequests, chunkSize = 25, maxParallel = 10) {
+    const cacheKeys = trackRequests.map(({ artist, song }) =>
+      this.cacheKeyGenerator.generate(artist, song)
+    )
+
+    console.log(
+      `🔍 Parallel bulk cache lookup for ${cacheKeys.length} tracks (${maxParallel} parallel chunks of ${chunkSize})`
+    )
+
+    const { Sequelize } = require('sequelize')
+
+    const chunks = this._chunkArray(cacheKeys, chunkSize)
+    const cacheMap = new Map()
+
+    const parallelLimit = Math.min(maxParallel, chunks.length)
+
+    for (let i = 0; i < chunks.length; i += parallelLimit) {
+      const chunkBatch = chunks.slice(i, i + parallelLimit)
+
+      console.log(
+        `📊 Processing cache chunk batch ${Math.floor(i / parallelLimit) + 1}/${Math.ceil(chunks.length / parallelLimit)} (${chunkBatch.length} chunks)`
+      )
+
+      const chunkPromises = chunkBatch.map(async (chunk, index) => {
+        const chunkResults = await models.LyricsCache.findAll({
+          where: {
+            cacheKey: { [Sequelize.Op.in]: chunk },
+          },
+          raw: true,
+        })
+
+        console.log(
+          `✅ Chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached results`
+        )
+        return chunkResults
+      })
+
+      const chunkResults = await Promise.all(chunkPromises)
+
+      chunkResults.flat().forEach((result) => {
+        const isExpired =
+          Date.now() - new Date(result.timestamp).getTime() > config.cache.ttl
+        if (!isExpired) {
+          cacheMap.set(result.cacheKey, result)
+        }
+      })
+    }
+
+    return trackRequests.map(({ artist, song }) => {
+      const cacheKey = this.cacheKeyGenerator.generate(artist, song)
+      const cached = cacheMap.get(cacheKey)
+      return {
+        artist,
+        song,
+        cacheKey,
+        cached: cached ? this._formatSearchResult(cached) : null,
+        lyrics: cached?.lyrics || null,
+      }
+    })
+  }
+
+  async getBulkCachedLyrics(songIds, chunkSize = 25, maxParallel = 10) {
+    console.log(
+      `🔍 Parallel bulk lyrics cache lookup for ${songIds.length} song IDs`
+    )
+
+    const { Sequelize } = require('sequelize')
+    const chunks = this._chunkArray(songIds, chunkSize)
+    const lyricsMap = new Map()
+
+    const parallelLimit = Math.min(maxParallel, chunks.length)
+
+    for (let i = 0; i < chunks.length; i += parallelLimit) {
+      const chunkBatch = chunks.slice(i, i + parallelLimit)
+
+      console.log(
+        `📊 Processing lyrics chunk batch ${Math.floor(i / parallelLimit) + 1}/${Math.ceil(chunks.length / parallelLimit)} (${chunkBatch.length} chunks)`
+      )
+
+      const chunkPromises = chunkBatch.map(async (chunk, index) => {
+        const chunkResults = await models.LyricsCache.findAll({
+          where: {
+            songId: { [Sequelize.Op.in]: chunk.map((id) => id.toString()) },
+            lyrics: { [Sequelize.Op.ne]: null },
+          },
+          attributes: ['songId', 'lyrics'],
+          raw: true,
+        })
+
+        console.log(
+          `✅ Lyrics chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached lyrics`
+        )
+        return chunkResults
+      })
+
+      const chunkResults = await Promise.all(chunkPromises)
+
+      chunkResults.flat().forEach((result) => {
+        lyricsMap.set(result.songId, result.lyrics)
+      })
+    }
+
+    return songIds.map((songId) => ({
+      songId,
+      lyrics: lyricsMap.get(songId.toString()) || null,
+    }))
+  }
+
+  _chunkArray(array, chunkSize) {
+    const chunks = []
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize))
+    }
+    return chunks
+  }
+
+  async processTracksBatch(tracks, cacheChunkSize = 50, maxParallel = 20) {
+    console.log(
+      `🎵 Processing batch of ${tracks.length} tracks with optimized parallel cache lookup (${maxParallel} parallel chunks)`
+    )
+
+    const trackRequests = tracks.map((track) => ({
+      artist: track.artists[0].name,
+      song: track.name,
+      track: track,
+    }))
+
+    const startTime = Date.now()
+    const cacheResults = await this.getBulkCachedResults(
+      trackRequests,
+      cacheChunkSize,
+      maxParallel
+    )
+    const cacheTime = Date.now() - startTime
+    console.log(`⚡ Cache lookup completed in ${cacheTime}ms`)
+
+    const results = []
+    const uncachedTracks = []
+
+    for (const result of cacheResults) {
+      if (result.cached && result.cached.found && result.lyrics) {
+        console.log(`📦 Complete cache hit: ${result.artist} - ${result.song}`)
+        results.push({
+          track: result.track,
+          searchResult: result.cached,
+          lyrics: result.lyrics,
+        })
+      } else if (result.cached && result.cached.found && !result.lyrics) {
+        console.log(`📦 Partial cache hit: ${result.artist} - ${result.song}`)
+        uncachedTracks.push({
+          ...result,
+          needsLyrics: true,
+        })
+      } else {
+        console.log(`❌ Cache miss: ${result.artist} - ${result.song}`)
+        uncachedTracks.push({
+          ...result,
+          needsSearch: true,
+        })
+      }
+    }
+
+    if (uncachedTracks.length > 0) {
+      const PARALLEL_LIMIT = 10
+      console.log(
+        `🔄 Processing ${uncachedTracks.length} uncached tracks with ${PARALLEL_LIMIT} parallel requests`
+      )
+
+      const uncachedResults = await this._processUncachedTracksParallel(
+        uncachedTracks,
+        PARALLEL_LIMIT
+      )
+      results.push(...uncachedResults)
+    }
+
+    return results
+  }
+
+  async _processUncachedTracksParallel(uncachedTracks, parallelLimit) {
+    const results = []
+
+    for (let i = 0; i < uncachedTracks.length; i += parallelLimit) {
+      const chunk = uncachedTracks.slice(i, i + parallelLimit)
+
+      const chunkPromises = chunk.map(async (trackData) => {
+        try {
+          if (trackData.needsSearch) {
+            const searchResult = await this._searchOnGenius(
+              trackData.artist,
+              trackData.song
+            )
+            await this._cacheSearchResult(
+              trackData.cacheKey,
+              trackData.artist,
+              trackData.song,
+              searchResult
+            )
+
+            if (searchResult.found && searchResult.songId) {
+              const lyrics = await this._fetchLyricsFromGenius(
+                searchResult.songId
+              )
+              if (lyrics) {
+                await this._cacheLyrics(searchResult.songId, lyrics)
+                return {
+                  track: trackData.track,
+                  searchResult,
+                  lyrics,
+                }
+              }
+            }
+          } else if (trackData.needsLyrics) {
+            const lyrics = await this._fetchLyricsFromGenius(
+              trackData.cached.songId
+            )
+            if (lyrics) {
+              await this._cacheLyrics(trackData.cached.songId, lyrics)
+              return {
+                track: trackData.track,
+                searchResult: trackData.cached,
+                lyrics,
+              }
+            }
+          }
+        } catch (error) {
+          console.error(
+            `❌ Error processing ${trackData.artist} - ${trackData.song}:`,
+            error
+          )
+        }
+        return null
+      })
+
+      const chunkResults = await Promise.all(chunkPromises)
+      results.push(...chunkResults.filter((result) => result !== null))
+
+      if (i + parallelLimit < uncachedTracks.length) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+    }
+
+    return results
+  }
+
   async searchSong(artist, song) {
     const cacheKey = this.cacheKeyGenerator.generate(artist, song)
 

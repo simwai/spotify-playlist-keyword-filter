@@ -1,5 +1,6 @@
 const authRoutes = require('./auth.js')
 const lyricsRoutes = require('./lyrics.js')
+const { spotifyRoutes } = require('./spotify.js')
 const path = require('path')
 const express = require('express')
 
@@ -8,9 +9,9 @@ function setupRoutes(app, container) {
 
   app.use('/', authRoutes(container))
   app.use('/api/lyrics', lyricsRoutes(container))
+  app.use('/api/spotify', spotifyRoutes(container))
 
   app.get('*', (req, res) => {
-    // Only redirect if it's not an API call, login, or callback
     if (
       !req.path.startsWith('/api') &&
       req.path !== '/login' &&

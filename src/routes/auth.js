@@ -1,10 +1,9 @@
 const express = require('express')
 const config = require('../config/index.js')
-const { TYPES } = require('../types.js')
-
 module.exports = (container) => {
   const router = express.Router()
-  const spotifyAuth = container.get(TYPES.SpotifyAuthService)
+  const spotifyAuth =
+    container.spotifyAuth || container.get('SpotifyAuthService')
 
   const buildErrorRedirect = (errorMessage) => {
     const baseUrl = config.app.frontendUrl

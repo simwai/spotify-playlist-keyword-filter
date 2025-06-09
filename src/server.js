@@ -9,7 +9,6 @@ const { setupContainer } = require('./container/index.js')
 const config = require('./config/index.js')
 const { initDatabase } = require('./database/index.js')
 
-// Setup Express app
 const container = setupContainer()
 const app = express()
 
