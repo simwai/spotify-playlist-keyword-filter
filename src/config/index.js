@@ -21,13 +21,10 @@ const config = {
   },
   cors: {
     origins: [
-      process.env.CORS_ORIGINS,
+      process.env.CORS_ORIGIN,
       'http://localhost:8888',
       'http://127.0.0.1:8888',
     ],
-  },
-  cache: {
-    ttl: 24 * 60 * 60 * 1000,
   },
 }
 

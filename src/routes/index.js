@@ -1,15 +1,16 @@
-const authRoutes = require('./auth.js')
-const lyricsRoutes = require('./lyrics.js')
-const { spotifyRoutes } = require('./spotify.js')
 const path = require('path')
 const express = require('express')
+
+const authRoutes = require('./auth.js')
+const lyricsRoutes = require('./lyrics.js')
+const { SpotifyRoutes } = require('./spotify.js')
 
 function setupRoutes(app, container) {
   app.use(express.static(path.join(__dirname, '../../frontend')))
 
   app.use('/', authRoutes(container))
   app.use('/api/lyrics', lyricsRoutes(container))
-  app.use('/api/spotify', spotifyRoutes(container))
+  app.use('/api/spotify', SpotifyRoutes(container))
 
   app.get('*', (req, res) => {
     if (
@@ -23,4 +24,6 @@ function setupRoutes(app, container) {
   })
 }
 
-module.exports = { setupRoutes }
+module.exports = setupRoutes
+module.exports.default = setupRoutes
+module.exports.setupRoutes = setupRoutes

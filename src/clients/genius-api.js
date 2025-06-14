@@ -1,24 +1,33 @@
-const needle = require('needle')
-const config = require('../config/index.js')
-
 class GeniusApiClient {
-  constructor() {
-    this.cachedToken = null
+  constructor(logger, httpClient, config) {
+    if (!logger) {
+      throw new Error('No logger provided to GeniusApiClient!')
+    }
+
+    if (!httpClient) {
+      throw new Error('No http client provided to GeniusApiClient!')
+    }
+
+    if (!config) {
+      throw new Error('No config provided to GeniusApiClient!')
+    }
+
+    this.logger = logger
+    this.httpClient = httpClient
+    this.config = config
+
     this.tokenExpiry = null
   }
 
   async search(query) {
-    const accessToken = await this._getAccessToken()
-    const searchUrl = `https://api.genius.com/search?q=${encodeURIComponent(query)}`
-
-    const response = await needle('get', searchUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+    this.accessToken = await this._getAccessToken()
+    const response = await this.httpClient('https://api.genius.com/search', {
+      searchParams: { q: query },
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      responseType: 'json',
     })
 
-    if (
-      response.statusCode === 200 &&
-      response.body?.response?.hits?.length > 0
-    ) {
+    if (response.body?.response?.hits?.length > 0) {
       const hit = response.body.response.hits[0].result
       return {
         id: hit.id,
@@ -31,48 +40,47 @@ class GeniusApiClient {
   }
 
   async getSong(songId) {
-    const accessToken = await this._getAccessToken()
-    const songUrl = `https://api.genius.com/songs/${songId}`
-
-    const response = await needle('get', songUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-
-    if (response.statusCode === 200) {
-      return response.body.response.song
-    }
-
-    return null
-  }
-
-  async _getAccessToken() {
-    if (this.cachedToken && this.tokenExpiry && Date.now() < this.tokenExpiry) {
-      return this.cachedToken
-    }
-
-    console.log('Getting new Genius access token...')
-
-    const response = await needle(
-      'post',
-      'https://api.genius.com/oauth/token',
-      'grant_type=client_credentials',
+    const response = await this.httpClient(
+      `https://api.genius.com/songs/${songId}`,
       {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${Buffer.from(`${config.genius.clientId}:${config.genius.clientSecret}`).toString('base64')}`,
-        },
+        headers: { Authorization: `Bearer ${this.accessToken}` },
+        responseType: 'json',
       }
     )
 
-    if (response.statusCode !== 200) {
-      throw new Error('Failed to get Genius access token')
+    return response.body.response.song
+  }
+
+  async _getAccessToken() {
+    if (this.accessToken && this.tokenExpiry && Date.now() < this.tokenExpiry) {
+      return this.accessToken
     }
 
-    this.cachedToken = response.body.access_token
+    this.logger.log('Getting new Genius access token...')
+
+    const authString = `${this.config.genius.clientId}:${this.config.genius.clientSecret}`
+    const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
+
+    const response = await this.httpClient.post(
+      'https://api.genius.com/oauth/token',
+      {
+        form: {
+          grant_type: 'client_credentials',
+        },
+        headers: {
+          Authorization: authHeader,
+        },
+        responseType: 'json',
+      }
+    )
+
+    this.accessToken = response.body.access_token
     this.tokenExpiry = Date.now() + 50 * 60 * 1000 // 50 minutes
 
-    return this.cachedToken
+    return this.accessToken
   }
 }
 
-module.exports = { GeniusApiClient }
+module.exports = GeniusApiClient
+module.exports.default = GeniusApiClient
+module.exports.GeniusApiClient = GeniusApiClient

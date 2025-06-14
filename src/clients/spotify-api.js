@@ -1,18 +1,19 @@
-const needle = require('needle')
-const config = require('../config/index.js')
-
 class SpotifyApiClient {
-  constructor(accessToken = null, refreshToken = null) {
+  constructor(httpClient, config, accessToken = null, refreshToken = null) {
+    if (!httpClient) {
+      throw new Error('No http client provided to SpotifyApiClient')
+    }
+
+    if (!config) {
+      throw new Error('No config provided to SpotifyApiClient')
+    }
+
+    this.httpClient = httpClient
+    this.config = config
+
     this.accessToken = accessToken
     this.refreshToken = refreshToken
     this.baseUrl = 'https://api.spotify.com/v1'
-  }
-
-  setTokens(accessToken, refreshToken = null) {
-    this.accessToken = accessToken
-    if (refreshToken) {
-      this.refreshToken = refreshToken
-    }
   }
 
   async getUserProfile() {
@@ -66,42 +67,33 @@ class SpotifyApiClient {
       throw new Error('No access token available. Please authenticate first.')
     }
 
-    let url = `${this.baseUrl}${endpoint}`
-
-    // Add query parameters
-    if (params && Object.keys(params).length > 0) {
-      const queryString = Object.keys(params)
-        .map(
-          (key) =>
-            `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
-        )
-        .join('&')
-      url += `?${queryString}`
-    }
+    const url = `${this.baseUrl}${endpoint}`
 
     const options = {
+      method,
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       },
+      responseType: 'json',
     }
 
-    let requestBody = null
+    if (params && Object.keys(params).length > 0) {
+      options.searchParams = params
+    }
+
     if (body) {
-      requestBody = JSON.stringify(body)
+      options.json = body
     }
 
     try {
-      const response = await needle(
-        method.toLowerCase(),
-        url,
-        requestBody,
-        options
-      )
-
+      // Make sure httpClient is used as a function
+      const response = await this.httpClient(url, options)
+      return response.body
+    } catch (error) {
       // Handle rate limiting
-      if (response.statusCode === 429) {
-        const retryAfter = parseInt(response.headers['retry-after']) || 1
+      if (error.response?.statusCode === 429) {
+        const retryAfter = parseInt(error.response.headers['retry-after']) || 1
         console.log(
           `Rate limited. Waiting ${retryAfter} seconds before retry...`
         )
@@ -110,7 +102,7 @@ class SpotifyApiClient {
       }
 
       // Handle token expiration
-      if (response.statusCode === 401 && retryCount === 0) {
+      if (error.response?.statusCode === 401 && retryCount === 0) {
         console.log('Access token expired, attempting refresh...')
         if (await this._refreshAccessToken()) {
           return this._makeRequest(
@@ -124,23 +116,17 @@ class SpotifyApiClient {
         throw new Error('Authentication failed - please re-authenticate')
       }
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        const errorMessage =
-          response.body?.error?.message ||
-          response.statusText ||
-          'Unknown error'
-        throw new Error(
-          `Spotify API Error (${response.statusCode}): ${errorMessage}`
-        )
-      }
+      const errorMessage =
+        error.response?.body?.error?.message || error.message || 'Unknown error'
 
-      return response.body
-    } catch (error) {
       console.error(
         `Error making ${method} request to ${endpoint}:`,
-        error.message
+        errorMessage
       )
-      throw error
+
+      throw new Error(
+        `Spotify API Error (${error.response?.statusCode || 'Unknown'}): ${errorMessage}`
+      )
     }
   }
 
@@ -149,24 +135,26 @@ class SpotifyApiClient {
       console.error('No refresh token available for token refresh')
       return false
     }
+
     try {
-      const authString = `${config.spotify.clientId}:${config.spotify.clientSecret}`
+      const authString = `${this.config.spotify.clientId}:${this.config.spotify.clientSecret}`
       const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
-      const response = await needle(
-        'post',
+      // Use the httpClient instead of got directly
+      const response = await this.httpClient.post(
         'https://accounts.spotify.com/api/token',
-        'grant_type=refresh_token&refresh_token=' +
-          encodeURIComponent(this.refreshToken),
         {
+          form: {
+            grant_type: 'refresh_token',
+            refresh_token: this.refreshToken,
+          },
           headers: {
             Authorization: authHeader,
-            'Content-Type': 'application/x-www-form-urlencoded',
           },
+          responseType: 'json',
         }
       )
-
-      if (response.statusCode === 200 && response.body.access_token) {
+      if (response.body?.access_token) {
         this.accessToken = response.body.access_token
         console.log('Access token refreshed successfully')
         return true
@@ -175,7 +163,7 @@ class SpotifyApiClient {
         return false
       }
     } catch (error) {
-      console.error('Error refreshing access token:', error)
+      console.error('Error refreshing access token:', error.message)
       return false
     }
   }
@@ -184,4 +172,7 @@ class SpotifyApiClient {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
-module.exports = { SpotifyApiClient }
+
+module.exports = SpotifyApiClient
+module.exports.default = SpotifyApiClient
+module.exports.SpotifyApiClient = SpotifyApiClient

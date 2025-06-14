@@ -1,24 +1,35 @@
-const he = require('he')
-
 class LyricsExtractor {
+  constructor(he, logger) {
+    if (!he) {
+      throw new Error('No he provided to LyrcsExtractor!')
+    }
+
+    if (!logger) {
+      throw new Error('No logger provided to LyricsExtractor!')
+    }
+
+    this.he = he
+    this.logger = logger
+  }
+
   extract(html) {
     try {
-      console.log('🔍 Extracting lyrics using data-lyrics-container...')
+      this.logger.log('🔍 Extracting lyrics using data-lyrics-container...')
 
       const regex = /<div[^>]*data-lyrics-container="true"[^>]*>(.*?)<\/div>/gs
       const matches = html.match(regex)
 
-      if (!matches || matches.length === 0) {
-        console.log('❌ No lyrics found with data-lyrics-container')
+      if (!matches) {
+        this.logger.log('❌ No lyrics found with data-lyrics-container')
         return null
       }
 
-      console.log(`✅ Found ${matches.length} lyrics containers`)
+      this.logger.log(`✅ Found ${matches.length} lyrics containers`)
 
       let allLyrics = ''
 
       for (const [index, match] of matches.entries()) {
-        console.log(`Processing container ${index + 1}...`)
+        this.logger.log(`Processing container ${index + 1}...`)
         const lyrics = this._extractLyricsFromContainer(match)
 
         if (lyrics && lyrics.length > 20) {
@@ -27,15 +38,18 @@ class LyricsExtractor {
       }
 
       if (allLyrics.trim().length > 50) {
-        console.log('✅ Successfully extracted lyrics!')
-        console.log('📄 Lyrics preview:', allLyrics.substring(0, 200) + '...')
+        this.logger.log('✅ Successfully extracted lyrics!')
+        this.logger.log(
+          '📄 Lyrics preview:',
+          allLyrics.substring(0, 200) + '...'
+        )
         return allLyrics.trim()
       }
 
-      console.log('❌ No sufficient lyrics content found')
+      this.logger.log('❌ No sufficient lyrics content found')
       return null
     } catch (error) {
-      console.error('💥 Error extracting lyrics:', error)
+      this.logger.error('💥 Error extracting lyrics:', error)
       return null
     }
   }
@@ -45,7 +59,7 @@ class LyricsExtractor {
       /<div[^>]*data-lyrics-container="true"[^>]*>(.*)<\/div>/s
     )
 
-    if (!contentMatch || !contentMatch[1]) {
+    if (!contentMatch?.[1]) {
       return null
     }
 
@@ -59,8 +73,10 @@ class LyricsExtractor {
       .replace(/\n\s*\n\s*\n/g, '\n\n')
       .trim()
 
-    return he.decode(lyrics)
+    return this.he.decode(lyrics)
   }
 }
 
-module.exports = { LyricsExtractor }
+module.exports = LyricsExtractor
+module.exports.default = LyricsExtractor
+module.exports.LyricsExtractor = LyricsExtractor

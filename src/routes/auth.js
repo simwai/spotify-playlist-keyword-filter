@@ -1,51 +1,50 @@
 const express = require('express')
-const config = require('../config/index.js')
+
 module.exports = (container) => {
   const router = express.Router()
-  const spotifyAuth =
-    container.spotifyAuth || container.get('SpotifyAuthService')
+  const spotifyAuth = container.spotifyAuthService
 
   const buildErrorRedirect = (errorMessage) => {
-    const baseUrl = config.app.frontendUrl
+    const baseUrl = container.config.app.frontendUrl
 
     return `${baseUrl}/#error=${encodeURIComponent(errorMessage)}`
   }
 
   router.get('/login', async (req, res) => {
     try {
-      console.log('🔐 Login endpoint accessed')
-      console.log('🍪 Existing cookies:', req.cookies)
+      container.logger.log('🔐 Login endpoint accessed')
+      container.logger.log('🍪 Existing cookies:', req.cookies)
 
       const authUrl = await spotifyAuth.getAuthUrl(res)
-      console.log('🔗 Auth URL generated:', authUrl)
+      container.logger.log('🔗 Auth URL generated:', authUrl)
 
       res.redirect(authUrl)
     } catch (loginError) {
-      console.error('Login failed:', loginError)
+      container.logger.error('Login failed:', loginError)
       res.redirect(buildErrorRedirect('Login failed'))
     }
   })
 
   router.get('/callback', async (req, res) => {
     try {
-      console.log('Callback endpoint accessed')
+      container.logger.log('Callback endpoint accessed')
       const redirectUrl = await spotifyAuth.handleCallback(req, res)
 
-      console.log('Callback successful')
+      container.logger.log('Callback successful')
       res.redirect(redirectUrl)
     } catch (callbackError) {
-      console.error('Callback failed:', callbackError)
+      container.logger.error('Callback failed:', callbackError)
       res.redirect(buildErrorRedirect('Authentication failed'))
     }
   })
 
-  router.get('/refresh_token', async (req, res) => {
+  router.get('/refresh_token', async (_req, res) => {
     try {
-      console.log('Refresh token endpoint accessed')
+      container.logger.log('Refresh token endpoint accessed')
       const redirectUrl = await spotifyAuth.refreshAccessToken()
       res.redirect(redirectUrl)
     } catch (refreshError) {
-      console.error('Token refresh failed:', refreshError)
+      container.logger.error('Token refresh failed:', refreshError)
       res.redirect(buildErrorRedirect('Token refresh failed'))
     }
   })

@@ -17,6 +17,4 @@ function setupMiddleware(app) {
   app.use(cookieParser())
 }
 
-module.exports = {
-  setupMiddleware,
-}
+module.exports = { setupMiddleware }

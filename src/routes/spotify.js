@@ -1,15 +1,18 @@
 const express = require('express')
-function createSpotifyRoutes(container) {
-  const router = express.Router()
 
-  router.get('/user-profile', async (req, res) => {
+class SpotifyRoutes {
+  constructor(container) {
+    this.container = container
+  }
+
+  async getUserProfile(req, res) {
     try {
       const { access_token, refresh_token } = req.query
       if (!access_token) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = container.get('SpotifyClient')(
+      const spotifyClient = this.container.spotifyClient(
         access_token,
         refresh_token
       )
@@ -20,16 +23,16 @@ function createSpotifyRoutes(container) {
       console.error('Error fetching user profile:', error)
       res.status(500).json({ error: error.message })
     }
-  })
+  }
 
-  router.get('/playlists', async (req, res) => {
+  async getPlaylists(req, res) {
     try {
       const { access_token, refresh_token, limit = 50, offset = 0 } = req.query
       if (!access_token) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = container.get('SpotifyClient')(
+      const spotifyClient = this.container.spotifyClient(
         access_token,
         refresh_token
       )
@@ -43,9 +46,9 @@ function createSpotifyRoutes(container) {
       console.error('Error fetching playlists:', error)
       res.status(500).json({ error: error.message })
     }
-  })
+  }
 
-  router.get('/playlist/:id/tracks', async (req, res) => {
+  async getPlaylistTracks(req, res) {
     try {
       const {
         access_token,
@@ -60,7 +63,7 @@ function createSpotifyRoutes(container) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = container.get('SpotifyClient')(
+      const spotifyClient = this.container.spotifyClient(
         access_token,
         refresh_token
       )
@@ -76,9 +79,9 @@ function createSpotifyRoutes(container) {
       console.error('Error fetching playlist tracks:', error)
       res.status(500).json({ error: error.message })
     }
-  })
+  }
 
-  router.post('/playlist', async (req, res) => {
+  async createPlaylist(req, res) {
     try {
       const { access_token, refresh_token } = req.query
       const { userId, name, description, public: isPublic } = req.body
@@ -87,7 +90,7 @@ function createSpotifyRoutes(container) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = container.get('SpotifyClient')(
+      const spotifyClient = this.container.spotifyClient(
         access_token,
         refresh_token
       )
@@ -103,9 +106,9 @@ function createSpotifyRoutes(container) {
       console.error('Error creating playlist:', error)
       res.status(500).json({ error: error.message })
     }
-  })
+  }
 
-  router.post('/playlist/:id/tracks', async (req, res) => {
+  async addTracksToPlaylist(req, res) {
     try {
       const { access_token, refresh_token } = req.query
       const { id } = req.params
@@ -115,7 +118,7 @@ function createSpotifyRoutes(container) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = container.get('SpotifyClient')(
+      const spotifyClient = this.container.spotifyClient(
         access_token,
         refresh_token
       )
@@ -126,9 +129,21 @@ function createSpotifyRoutes(container) {
       console.error('Error adding tracks to playlist:', error)
       res.status(500).json({ error: error.message })
     }
-  })
+  }
 
-  return router
+  getRouter() {
+    const router = express.Router()
+
+    router.get('/user-profile', this.getUserProfile.bind(this))
+    router.get('/playlists', this.getPlaylists.bind(this))
+    router.get('/playlist/:id/tracks', this.getPlaylistTracks.bind(this))
+    router.post('/playlists', this.createPlaylist.bind(this))
+    router.post('/playlist/:id/tracks', this.addTracksToPlaylist.bind(this))
+
+    return router
+  }
 }
 
-module.exports = { spotifyRoutes: createSpotifyRoutes }
+module.exports = {
+  SpotifyRoutes: (container) => new SpotifyRoutes(container).getRouter(),
+}

@@ -1,25 +1,34 @@
 const { stringify } = require('querystring')
-const needle = require('needle')
+
 const config = require('../config/index.js')
 const { generateRandomString } = require('../utils/crypto.js')
 
 class SpotifyAuthService {
-  constructor() {
+  constructor(logger, config, httpClient) {
+    if (!logger) {
+      throw new Error('No logger provided to SpotifyAuthService!')
+    }
+
+    if (!config) {
+      throw new Error('No config provided to SpotifyAuthService!')
+    }
+
+    if (!httpClient) {
+      throw new Error('No http client provided to SpotifyAuthService!')
+    }
+
+    this.logger = logger
+    this.config = config
+    this.httpClient = httpClient
+
     this.stateKey = 'spotify_auth_state'
     this.refreshToken = null
     this.uid = null
-    this.isDevelopment = process.env.NODE_ENV === 'development'
-  }
-
-  _debugLog(...args) {
-    if (this.isDevelopment) {
-      console.log(...args)
-    }
   }
 
   async getAuthUrl(res) {
     const state = generateRandomString(16)
-    this._debugLog('🔐 Generated state:', state)
+    this.logger.log('🔐 Generated state:', state)
 
     const cookieOptions = {
       httpOnly: true,
@@ -31,7 +40,7 @@ class SpotifyAuthService {
 
     res.cookie(this.stateKey, state, cookieOptions)
 
-    this._debugLog(
+    this.logger.log(
       '🍪 Set cookie with key:',
       this.stateKey,
       'and value:',
@@ -49,7 +58,7 @@ class SpotifyAuthService {
       redirect_uri: redirectUri,
       state,
     })}`
-    this._debugLog('Auth URL generated successfully')
+    this.logger.log('Auth URL generated successfully')
     return authUrl
   }
 
@@ -57,26 +66,26 @@ class SpotifyAuthService {
     const { code, state, error } = req.query
     const storedState = req.cookies?.[this.stateKey]
 
-    this._debugLog('🔍 Callback debugging:')
-    this._debugLog('  - Received state:', state)
-    this._debugLog('  - Stored state:', storedState)
-    this._debugLog('  - State key:', this.stateKey)
-    this._debugLog('  - All cookies:', req.cookies)
-    this._debugLog('  - Query params:', req.query)
+    this.logger.log('🔍 Callback debugging:')
+    this.logger.log('  - Received state:', state)
+    this.logger.log('  - Stored state:', storedState)
+    this.logger.log('  - State key:', this.stateKey)
+    this.logger.log('  - All cookies:', req.cookies)
+    this.logger.log('  - Query params:', req.query)
 
     if (error) {
-      console.error('Spotify authorization error:', error)
+      this.logger.error('Spotify authorization error:', error)
       throw new Error('Authorization denied by Spotify')
     }
 
     if (!state || state !== storedState) {
-      console.error('State validation failed')
-      console.error('Expected:', storedState, 'Received:', state)
+      this.logger.error('State validation failed')
+      this.logger.error('Expected:', storedState, 'Received:', state)
       throw new Error('Security validation failed')
     }
 
     if (!code) {
-      console.error('No authorization code received')
+      this.logger.error('No authorization code received')
       throw new Error('Authorization code missing')
     }
 
@@ -89,29 +98,29 @@ class SpotifyAuthService {
 
       this.uid = userProfile.id
       this.refreshToken = tokens.refresh_token
-      this._debugLog('User authenticated successfully')
+      this.logger.log('👤 User authenticated successfully')
       return this._buildRedirectUrl(tokens)
     } catch (exchangeError) {
-      console.error('Token exchange failed:', exchangeError)
+      this.logger.error('Token exchange failed:', exchangeError)
       throw exchangeError
     }
   }
 
   async refreshAccessToken() {
     if (!this.refreshToken) {
-      console.error('No refresh token available')
+      this.logger.error('No refresh token available')
       throw new Error('No refresh token available')
     }
 
     try {
       const tokens = await this._refreshAccessToken()
-      this._debugLog('Token refreshed successfully')
+      this.logger.log('Token refreshed successfully')
       return this._buildRedirectUrl({
         access_token: tokens.access_token,
         refresh_token: this.refreshToken,
       })
     } catch (refreshError) {
-      console.error('Token refresh failed:', refreshError)
+      this.logger.error('Token refresh failed:', refreshError)
       throw refreshError
     }
   }
@@ -126,33 +135,34 @@ class SpotifyAuthService {
     const authString = `${config.spotify.clientId}:${config.spotify.clientSecret}`
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
-    this._debugLog('🔄 Exchanging code for tokens...')
-    this._debugLog('📝 Request body:', requestBody)
+    this.logger.log('🔄 Exchanging code for tokens...')
+    this.logger.log('📝 Request body:', JSON.stringify(requestBody))
 
     try {
-      const response = await needle(
-        'post',
+      const response = await this.httpClient.post(
         'https://accounts.spotify.com/api/token',
-        stringify(requestBody),
         {
+          body: stringify(requestBody),
           headers: {
             Authorization: authHeader,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          timeout: 15000,
+          timeout: {
+            request: 15000,
+          },
         }
       )
 
-      this._debugLog('📊 Token response status:', response.statusCode)
-      this._debugLog('🎫 Token response body:', response.body)
+      this.logger.log('📊 Token response status:', response.statusCode)
+      this.logger.log('🎫 Token response body:', response.body)
 
       if (response.statusCode !== 200) {
-        console.error('Spotify token request failed:', response.body)
+        this.logger.error('Spotify token request failed:', response.body)
         throw new Error('Token exchange failed')
       }
 
       if (!response.body) {
-        console.error('Empty response from Spotify')
+        this.logger.error('Empty response from Spotify')
         throw new Error('Empty token response')
       }
 
@@ -161,54 +171,49 @@ class SpotifyAuthService {
         try {
           parsedBody = JSON.parse(response.body)
         } catch (parseError) {
-          console.error('Failed to parse token response:', parseError)
+          this.logger.error('Failed to parse token response:', parseError)
           throw parseError
         }
       }
 
       if (!parsedBody.access_token) {
-        console.error('No access token in response')
+        this.logger.error('No access token in response')
         throw new Error('Missing access token')
       }
 
       return parsedBody
     } catch (requestError) {
-      console.error('Token exchange request failed:', requestError)
+      this.logger.error('Token exchange request failed:', requestError)
       throw requestError
     }
   }
 
   async _fetchUserProfile(accessToken) {
-    this._debugLog(
+    this.logger.log(
       '👤 Fetching user profile with token:',
       accessToken?.substring(0, 20) + '...'
     )
 
     try {
-      const response = await needle('get', 'https://api.spotify.com/v1/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000,
-      })
+      const response = await this.httpClient
+        .get('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: {
+            request: 10000,
+          },
+        })
+        .json()
 
-      this._debugLog('👤 Profile response status:', response.statusCode)
-      this._debugLog('👤 Profile response body:', response.body)
-
-      if (response.statusCode !== 200) {
-        console.error('Failed to fetch user profile:', response.body)
-        throw new Error('Profile fetch failed')
-      }
-
-      if (!response.body?.id) {
-        console.error('No user ID in profile response')
+      if (!response?.id) {
+        this.logger.error('No user ID in profile response')
         throw new Error('Invalid profile response')
       }
-
-      return response.body
+      return response
     } catch (profileError) {
-      console.error('User profile request failed:', profileError)
+      this.logger.error('User profile request failed:', profileError)
       throw profileError
     }
   }
@@ -218,30 +223,29 @@ class SpotifyAuthService {
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
     try {
-      const response = await needle(
-        'post',
-        'https://accounts.spotify.com/api/token',
-        stringify({
-          grant_type: 'refresh_token',
-          refresh_token: this.refreshToken,
-        }),
-        {
+      const response = await this.httpClient
+        .post('https://accounts.spotify.com/api/token', {
+          form: {
+            grant_type: 'refresh_token',
+            refresh_token: this.refreshToken,
+          },
           headers: {
             Authorization: authHeader,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          timeout: 10000,
-        }
-      )
+          timeout: {
+            request: 15000,
+          },
+        })
+        .json()
 
-      if (response.statusCode !== 200) {
-        console.error('Token refresh request failed:', response.body)
+      if (!response) {
+        this.logger.error('Token refresh request failed:', response)
         throw new Error('Refresh request failed')
       }
-
-      return response.body
+      return response
     } catch (refreshError) {
-      console.error('Token refresh error:', refreshError)
+      this.logger.error('Token refresh error:', refreshError)
       throw refreshError
     }
   }
@@ -259,4 +263,6 @@ class SpotifyAuthService {
   }
 }
 
-module.exports = { SpotifyAuthService }
+module.exports = SpotifyAuthService
+module.exports.default = SpotifyAuthService
+module.exports.SpotifyAuthService = SpotifyAuthService

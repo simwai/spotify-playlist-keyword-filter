@@ -1,7 +1,9 @@
 planning
 dist
 *.sqlite
+*.db
 *.old
+lyrics-cache/
 
 # Environment files
 .env

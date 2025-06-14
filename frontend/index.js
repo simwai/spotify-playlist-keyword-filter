@@ -156,37 +156,42 @@ class SpotifyPlaylistFilter {
   }
 
   async updateUI() {
-    if (this.accessToken) {
-      if (!this.userId) {
-        try {
-          const userData = await this._spotifyApiGet('/me')
-          this.userId = userData.id
-          try {
-            sessionStorage.setItem('spotify_user_id', this.userId)
-          } catch (e) {
-            console.warn('Failed to store uid from /me in sessionStorage', e)
-          }
-        } catch (error) {
-          this.accessToken = null
-          this.refreshToken = null
-          this.userId = null
-          try {
-            sessionStorage.removeItem('spotify_access_token')
-            sessionStorage.removeItem('spotify_refresh_token')
-            sessionStorage.removeItem('spotify_user_id')
-          } catch (e) {
-            console.warn('Failed to clear sessionStorage', e)
-          }
-          this.navigateTo('login')
-          this.showError(
-            'Session expired or token invalid. Please log in again.'
-          )
-          return
-        }
+    if (!this.accessToken) {
+      this.navigateTo('login')
+      return
+    }
+
+    if (this.userId) {
+      this.loadPlaylists()
+      return
+    }
+
+    try {
+      const userData = await this._spotifyApiGet('/me')
+      this.userId = userData.id
+      try {
+        sessionStorage.setItem('spotify_user_id', this.userId)
+      } catch (e) {
+        console.warn('Failed to store uid from /me in sessionStorage', e)
       }
       this.loadPlaylists()
-    } else {
+    } catch (error) {
+      this._clearAuthData()
       this.navigateTo('login')
+      this.showError('Session expired or token invalid. Please log in again.')
+    }
+  }
+
+  _clearAuthData() {
+    this.accessToken = null
+    this.refreshToken = null
+    this.userId = null
+    try {
+      sessionStorage.removeItem('spotify_access_token')
+      sessionStorage.removeItem('spotify_refresh_token')
+      sessionStorage.removeItem('spotify_user_id')
+    } catch (e) {
+      console.warn('Failed to clear sessionStorage', e)
     }
   }
 
@@ -392,10 +397,16 @@ class SpotifyPlaylistFilter {
   }
 
   async startFiltering() {
-    if (!this.selectedPlaylist || this.keywords.length === 0) {
-      this.showError('Please select a playlist and add keywords.')
+    if (!this.selectedPlaylist) {
+      this.showError('Please select a playlist.')
       return
     }
+
+    if (this.keywords.length === 0) {
+      this.showError('Please add keywords.')
+      return
+    }
+
     const startButton = document.getElementById('start-button')
     if (startButton) {
       startButton.disabled = true
@@ -654,57 +665,37 @@ class SpotifyPlaylistFilter {
         const response = await this._spotifyApiGet(endpoint, params)
         const items = response.items
 
-        if (items && items.length > 0) {
-          const validTracks = items.filter(
-            (item) =>
-              item?.track &&
-              item.track.artists?.length > 0 &&
-              item.track.name &&
-              item.track.uri
-          )
+        if (!items) {
+          console.error('No items received!')
+          hasData = false
+        }
 
-          const invalidUriTracks = validTracks.filter(
-            (trackItem) => !this._isValidSpotifyUri(trackItem.track.uri)
-          )
-          if (invalidUriTracks.length > 0) {
-            console.warn(
-              `⚠️ Found ${invalidUriTracks.length} tracks with invalid URIs in fetch batch ${batchCount}:`
-            )
-            invalidUriTracks.forEach((trackItem) => {
-              console.warn(
-                `  → "${trackItem.track.name}" by ${trackItem.track.artists[0].name}: ${trackItem.track.uri}`
-              )
-            })
-          }
+        items.filter(
+          (trackItem) => !this._isValidSpotifyUri(trackItem.track.uri)
+        )
 
-          totalFetched += validTracks.length
-          console.log(
-            `✅ Batch ${batchCount}: Got ${validTracks.length} valid tracks (total: ${totalFetched})`
-          )
-          this.updateResultOutput(
-            `<span>🔄 Fetched ${totalFetched} / ${this.selectedPlaylist.tracks.total} tracks...</span>`
-          )
+        totalFetched += items.length
+        console.log(
+          `✅ Batch ${batchCount}: Got ${items.length} valid tracks (total: ${totalFetched})`
+        )
+        this.updateResultOutput(
+          `<span>🔄 Fetched ${totalFetched} / ${this.selectedPlaylist.tracks.total} tracks...</span>`
+        )
 
-          for (const trackItem of validTracks) {
-            yield trackItem.track
-          }
-          offset += items.length
-          if (!response.next) {
-            hasMoreData = false
-            console.log(
-              `🏁 Reached end of playlist - total valid tracks: ${totalFetched}`
-            )
-          }
-        } else {
+        for (const trackItem of items) {
+          yield trackItem.track
+        }
+        offset += items.length
+        if (!response.next) {
           hasMoreData = false
           console.log(
-            `🏁 No more tracks found - total valid tracks: ${totalFetched}`
+            `🏁 Reached end of playlist - total valid tracks: ${totalFetched}`
           )
         }
       } catch (error) {
         console.error(`❌ Error fetching tracks batch ${batchCount}:`, error)
         this.showError(`Error fetching playlist tracks: ${error.message}`)
-        throw error
+        hasMoreData = false
       }
     }
   }
@@ -716,19 +707,26 @@ class SpotifyPlaylistFilter {
 
     try {
       const apiBaseUrl = window.location.origin
+      const requestPayload = {
+        tracks: trackBatch.map((track) => ({
+          name: track.name,
+          artists: track.artists,
+          uri: track.uri,
+          id: track.id,
+        })),
+      }
+
+      console.log(
+        `🔍 Bulk API request payload for batch ${batchNumber}:`,
+        requestPayload
+      )
+
       const response = await fetch(`${apiBaseUrl}/api/lyrics/bulk-process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          tracks: trackBatch.map((track) => ({
-            name: track.name,
-            artists: track.artists,
-            uri: track.uri,
-            id: track.id,
-          })),
-        }),
+        body: JSON.stringify(requestPayload),
       })
 
       if (!response.ok) {
@@ -736,9 +734,6 @@ class SpotifyPlaylistFilter {
       }
 
       const bulkResult = await response.json()
-      console.log(
-        `✅ Bulk processing completed: ${bulkResult.results} results from ${bulkResult.processed} tracks`
-      )
 
       const tracksToKeep = []
       let filteredOutCountInBatch = 0
@@ -748,43 +743,40 @@ class SpotifyPlaylistFilter {
 
         if (!lyrics) {
           console.log(
-            `🚫 Lyrics not found for "${track.name}" by ${track.artists[0].name}. Skipping track.`
+            `🚫 Lyrics not found for "${track.song}" by ${track.artist}. Skipping track.`
           )
           filteredOutCountInBatch++
           continue
         }
 
-        const lowerCaseLyrics = lyrics.toLowerCase()
-        let matchesKeyword = false
-        for (const keyword of this.keywords) {
-          if (lowerCaseLyrics.includes(keyword.toLowerCase())) {
-            matchesKeyword = true
-            break
-          }
-        }
+        const isKeywordInLyrics = this.checkKeywordInLyrics(lyrics)
 
         if (this.filterMode === 'exclude') {
-          if (matchesKeyword) {
+          if (isKeywordInLyrics) {
             console.log(
-              `🚫 EXCLUDE mode: Filtering out "${track.name}" by ${track.artists[0].name} (matches keyword).`
+              `🚫 EXCLUDE mode: Filtering out "${track.song}" by ${track.artist} (matches keyword).`
             )
             filteredOutCountInBatch++
           } else {
             console.log(
-              `✅ EXCLUDE mode: Keeping "${track.name}" by ${track.artists[0].name}.`
+              `✅ EXCLUDE mode: Keeping "${track.song}" by ${track.artist}.`
             )
             tracksToKeep.push(track)
           }
-        } else if (matchesKeyword) {
-          console.log(
-            `✅ INCLUDE mode: Keeping "${track.name}" by ${track.artists[0].name} (matches keyword).`
-          )
-          tracksToKeep.push(track)
-        } else {
-          console.log(
-            `🚫 INCLUDE mode: Filtering out "${track.name}" by ${track.artists[0].name} (no keyword match).`
-          )
-          filteredOutCountInBatch++
+        }
+
+        if (this.filterMode === 'include') {
+          if (isKeywordInLyrics) {
+            console.log(
+              `✅ INCLUDE mode: Keeping "${track.song}" by ${track.artist} (matches keyword).`
+            )
+            tracksToKeep.push(track)
+          } else {
+            console.log(
+              `🚫 INCLUDE mode: Filtering out "${track.song}" by ${track.artist} (no keyword match).`
+            )
+            filteredOutCountInBatch++
+          }
         }
       }
 
@@ -803,84 +795,19 @@ class SpotifyPlaylistFilter {
         `❌ Bulk processing failed for batch ${batchNumber}:`,
         error
       )
-      console.log(
-        `🔄 Falling back to individual processing for batch ${batchNumber}`
-      )
-      return this._processTrackBatchIndividual(trackBatch, batchNumber)
     }
   }
 
-  async _processTrackBatchIndividual(trackBatch, batchNumber) {
-    console.log(
-      `🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks`
-    )
-    const tracksToKeep = []
-    let filteredOutCountInBatch = 0
-
-    const trackPromises = trackBatch.map(async (track) => {
-      const artistName = track.artists[0].name
-      const songName = track.name
-
-      const lyrics = await this._fetchLyricsForTrack(artistName, songName)
-
-      if (!lyrics) {
-        console.log(
-          `🚫 Lyrics not found for "${songName}" by ${artistName}. Skipping track (as per Point 3).`
-        )
-        filteredOutCountInBatch++
-        return null
+  checkKeywordInLyrics(lyrics) {
+    const lowerCaseLyrics = lyrics.toLowerCase()
+    let isKeywordInLyrics = false
+    for (const keyword of this.keywords) {
+      if (lowerCaseLyrics.includes(keyword.toLowerCase())) {
+        isKeywordInLyrics = true
+        break
       }
-
-      const lowerCaseLyrics = lyrics.toLowerCase()
-      let matchesKeyword = false
-      for (const keyword of this.keywords) {
-        if (lowerCaseLyrics.includes(keyword.toLowerCase())) {
-          matchesKeyword = true
-          break
-        }
-      }
-
-      if (this.filterMode === 'exclude') {
-        if (matchesKeyword) {
-          console.log(
-            `🚫 EXCLUDE mode: Filtering out "${songName}" by ${artistName} (matches keyword).`
-          )
-          filteredOutCountInBatch++
-          return null
-        } else {
-          console.log(
-            `✅ EXCLUDE mode: Keeping "${songName}" by ${artistName}.`
-          )
-          return track
-        }
-      } else {
-        if (matchesKeyword) {
-          console.log(
-            `✅ INCLUDE mode: Keeping "${songName}" by ${artistName} (matches keyword).`
-          )
-          return track
-        }
-
-        console.log(
-          `🚫 INCLUDE mode: Filtering out "${songName}" by ${artistName} (no keyword match).`
-        )
-        filteredOutCountInBatch++
-
-        return null
-      }
-    })
-
-    const results = await Promise.all(trackPromises)
-    results.forEach((track) => {
-      if (track) {
-        tracksToKeep.push(track)
-      }
-    })
-
-    console.log(
-      `✅ Batch ${batchNumber} completed - Kept: ${tracksToKeep.length}, Filtered out: ${filteredOutCountInBatch}`
-    )
-    return { tracksToKeep, filteredOutCountInBatch }
+    }
+    return isKeywordInLyrics
   }
 
   async _createFilteredPlaylist() {
@@ -896,10 +823,16 @@ class SpotifyPlaylistFilter {
     )
 
     try {
-      const playlistData = await this._spotifyApiPost('/playlist', {
-        userId: this.userId,
+      let description
+      if (this.filterMode === 'include') {
+        description = `Filtered playlist excluding songs with keywords: ${this.keywords.join(', ')}`
+      } else {
+        description = `Filtered playlist containing songs that match specified criteria`
+      }
+
+      const playlistData = await this._spotifyApiPost('/me/playlists', {
         name: newPlaylistName,
-        description: `Filtered based on keywords: ${this.keywords.join(', ')} (Mode: ${this.filterMode})`,
+        description: description,
         public: false,
       })
       console.log(
@@ -960,7 +893,7 @@ class SpotifyPlaylistFilter {
       )
 
       try {
-        await this._spotifyApiPost(`/playlist/${playlistId}/tracks`, {
+        await this._spotifyApiPost(`/playlists/${playlistId}/tracks`, {
           uris: batch,
         })
         console.log(

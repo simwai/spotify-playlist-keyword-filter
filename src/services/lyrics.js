@@ -1,405 +1,188 @@
-const needle = require('needle')
-const config = require('../config/index.js')
-const { models } = require('../database/index.js')
-const { generateRandomString } = require('../utils/crypto.js')
+const LyricsCache = require('../cache/lyrics-cache-model.js')
 
 class LyricsService {
-  constructor(geniusClient, lyricsExtractor, cacheKeyGenerator) {
+  constructor(geniusClient, lyricsExtractor, httpClient, logger) {
+    if (!geniusClient) {
+      throw new Error('No genius client provided to LyricsService!')
+    }
+
+    if (!lyricsExtractor) {
+      throw new Error('No lyrics extractor provided to LyricsService!')
+    }
+
+    if (!httpClient) {
+      throw new Error('No http client provided to LyricsService!')
+    }
+
+    if (!logger) {
+      throw new Error('No logger provided to LyricsService!')
+    }
+
     this.geniusClient = geniusClient
     this.lyricsExtractor = lyricsExtractor
-    this.cacheKeyGenerator = cacheKeyGenerator
+    this.httpClient = httpClient
+    this.logger = logger
   }
 
-  async getBulkCachedResults(trackRequests, chunkSize = 25, maxParallel = 10) {
-    const cacheKeys = trackRequests.map(({ artist, song }) =>
-      this.cacheKeyGenerator.generate(artist, song)
-    )
+  async * processTracksBatch(tracks) {
+    const BATCH_SIZE = 10
 
-    console.log(
-      `🔍 Parallel bulk cache lookup for ${cacheKeys.length} tracks (${maxParallel} parallel chunks of ${chunkSize})`
-    )
-
-    const { Sequelize } = require('sequelize')
-
-    const chunks = this._chunkArray(cacheKeys, chunkSize)
-    const cacheMap = new Map()
-
-    const parallelLimit = Math.min(maxParallel, chunks.length)
-
-    for (let i = 0; i < chunks.length; i += parallelLimit) {
-      const chunkBatch = chunks.slice(i, i + parallelLimit)
-
-      console.log(
-        `📊 Processing cache chunk batch ${Math.floor(i / parallelLimit) + 1}/${Math.ceil(chunks.length / parallelLimit)} (${chunkBatch.length} chunks)`
+    for (let i = 0; i < tracks.length; i += BATCH_SIZE) {
+      const batch = tracks.slice(i, i + BATCH_SIZE)
+      const results = await Promise.allSettled(
+        batch.map((track) => this._processTrack(track))
       )
 
-      const chunkPromises = chunkBatch.map(async (chunk, index) => {
-        const chunkResults = await models.LyricsCache.findAll({
-          where: {
-            cacheKey: { [Sequelize.Op.in]: chunk },
-          },
-          raw: true,
-        })
-
-        console.log(
-          `✅ Chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached results`
-        )
-        return chunkResults
-      })
-
-      const chunkResults = await Promise.all(chunkPromises)
-
-      chunkResults.flat().forEach((result) => {
-        const isExpired =
-          Date.now() - new Date(result.timestamp).getTime() > config.cache.ttl
-        if (!isExpired) {
-          cacheMap.set(result.cacheKey, result)
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          yield result.value
+        } else if (result.status === 'rejected') {
+          this.logger.warn(result.reason)
         }
-      })
-    }
-
-    return trackRequests.map(({ artist, song }) => {
-      const cacheKey = this.cacheKeyGenerator.generate(artist, song)
-      const cached = cacheMap.get(cacheKey)
-      return {
-        artist,
-        song,
-        cacheKey,
-        cached: cached ? this._formatSearchResult(cached) : null,
-        lyrics: cached?.lyrics || null,
-      }
-    })
-  }
-
-  async getBulkCachedLyrics(songIds, chunkSize = 25, maxParallel = 10) {
-    console.log(
-      `🔍 Parallel bulk lyrics cache lookup for ${songIds.length} song IDs`
-    )
-
-    const { Sequelize } = require('sequelize')
-    const chunks = this._chunkArray(songIds, chunkSize)
-    const lyricsMap = new Map()
-
-    const parallelLimit = Math.min(maxParallel, chunks.length)
-
-    for (let i = 0; i < chunks.length; i += parallelLimit) {
-      const chunkBatch = chunks.slice(i, i + parallelLimit)
-
-      console.log(
-        `📊 Processing lyrics chunk batch ${Math.floor(i / parallelLimit) + 1}/${Math.ceil(chunks.length / parallelLimit)} (${chunkBatch.length} chunks)`
-      )
-
-      const chunkPromises = chunkBatch.map(async (chunk, index) => {
-        const chunkResults = await models.LyricsCache.findAll({
-          where: {
-            songId: { [Sequelize.Op.in]: chunk.map((id) => id.toString()) },
-            lyrics: { [Sequelize.Op.ne]: null },
-          },
-          attributes: ['songId', 'lyrics'],
-          raw: true,
-        })
-
-        console.log(
-          `✅ Lyrics chunk ${i + index + 1}: Found ${chunkResults.length}/${chunk.length} cached lyrics`
-        )
-        return chunkResults
-      })
-
-      const chunkResults = await Promise.all(chunkPromises)
-
-      chunkResults.flat().forEach((result) => {
-        lyricsMap.set(result.songId, result.lyrics)
-      })
-    }
-
-    return songIds.map((songId) => ({
-      songId,
-      lyrics: lyricsMap.get(songId.toString()) || null,
-    }))
-  }
-
-  _chunkArray(array, chunkSize) {
-    const chunks = []
-    for (let i = 0; i < array.length; i += chunkSize) {
-      chunks.push(array.slice(i, i + chunkSize))
-    }
-    return chunks
-  }
-
-  async processTracksBatch(tracks, cacheChunkSize = 50, maxParallel = 20) {
-    console.log(
-      `🎵 Processing batch of ${tracks.length} tracks with optimized parallel cache lookup (${maxParallel} parallel chunks)`
-    )
-
-    const trackRequests = tracks.map((track) => ({
-      artist: track.artists[0].name,
-      song: track.name,
-      track: track,
-    }))
-
-    const startTime = Date.now()
-    const cacheResults = await this.getBulkCachedResults(
-      trackRequests,
-      cacheChunkSize,
-      maxParallel
-    )
-    const cacheTime = Date.now() - startTime
-    console.log(`⚡ Cache lookup completed in ${cacheTime}ms`)
-
-    const results = []
-    const uncachedTracks = []
-
-    for (const result of cacheResults) {
-      if (result.cached && result.cached.found && result.lyrics) {
-        console.log(`📦 Complete cache hit: ${result.artist} - ${result.song}`)
-        results.push({
-          track: result.track,
-          searchResult: result.cached,
-          lyrics: result.lyrics,
-        })
-      } else if (result.cached && result.cached.found && !result.lyrics) {
-        console.log(`📦 Partial cache hit: ${result.artist} - ${result.song}`)
-        uncachedTracks.push({
-          ...result,
-          needsLyrics: true,
-        })
-      } else {
-        console.log(`❌ Cache miss: ${result.artist} - ${result.song}`)
-        uncachedTracks.push({
-          ...result,
-          needsSearch: true,
-        })
       }
     }
-
-    if (uncachedTracks.length > 0) {
-      const PARALLEL_LIMIT = 10
-      console.log(
-        `🔄 Processing ${uncachedTracks.length} uncached tracks with ${PARALLEL_LIMIT} parallel requests`
-      )
-
-      const uncachedResults = await this._processUncachedTracksParallel(
-        uncachedTracks,
-        PARALLEL_LIMIT
-      )
-      results.push(...uncachedResults)
-    }
-
-    return results
-  }
-
-  async _processUncachedTracksParallel(uncachedTracks, parallelLimit) {
-    const results = []
-
-    for (let i = 0; i < uncachedTracks.length; i += parallelLimit) {
-      const chunk = uncachedTracks.slice(i, i + parallelLimit)
-
-      const chunkPromises = chunk.map(async (trackData) => {
-        try {
-          if (trackData.needsSearch) {
-            const searchResult = await this._searchOnGenius(
-              trackData.artist,
-              trackData.song
-            )
-            await this._cacheSearchResult(
-              trackData.cacheKey,
-              trackData.artist,
-              trackData.song,
-              searchResult
-            )
-
-            if (searchResult.found && searchResult.songId) {
-              const lyrics = await this._fetchLyricsFromGenius(
-                searchResult.songId
-              )
-              if (lyrics) {
-                await this._cacheLyrics(searchResult.songId, lyrics)
-                return {
-                  track: trackData.track,
-                  searchResult,
-                  lyrics,
-                }
-              }
-            }
-          } else if (trackData.needsLyrics) {
-            const lyrics = await this._fetchLyricsFromGenius(
-              trackData.cached.songId
-            )
-            if (lyrics) {
-              await this._cacheLyrics(trackData.cached.songId, lyrics)
-              return {
-                track: trackData.track,
-                searchResult: trackData.cached,
-                lyrics,
-              }
-            }
-          }
-        } catch (error) {
-          console.error(
-            `❌ Error processing ${trackData.artist} - ${trackData.song}:`,
-            error
-          )
-        }
-        return null
-      })
-
-      const chunkResults = await Promise.all(chunkPromises)
-      results.push(...chunkResults.filter((result) => result !== null))
-
-      if (i + parallelLimit < uncachedTracks.length) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      }
-    }
-
-    return results
   }
 
   async searchSong(artist, song) {
-    const cacheKey = this.cacheKeyGenerator.generate(artist, song)
+    // Try to find songId in cache first
+    try {
+      const cachedEntry = await LyricsCache.findOne({
+        where: {
+          artist: artist.trim(),
+          song: song.trim(),
+        },
+      })
 
-    const cachedResult = await this._getCachedSearch(cacheKey)
-    if (cachedResult) {
-      console.log('📦 Database cache hit for:', artist, '-', song)
-      return this._formatSearchResult(cachedResult)
+      if (cachedEntry?.songId) {
+        this.logger.log(`📦 Cache hit for song search: ${artist} - ${song}`)
+        return {
+          songId: cachedEntry.songId,
+          title: song,
+          artist: artist,
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error checking song cache:', error)
     }
 
-    console.log(
-      '🔍 Database cache miss, searching Genius for:',
-      artist,
-      '-',
-      song
-    )
+    // If not in cache, search with Genius API
+    this.logger.log(`🔍 Searching Genius for: ${artist} - ${song}`)
+    const queries = [
+      `${song} ${artist}`,
+      `${song.replace(/\s*\([^)]*\)/g, '')} ${artist}`,
+      `${artist} ${song}`,
+      song,
+    ]
 
-    const searchResult = await this._searchOnGenius(artist, song)
-    await this._cacheSearchResult(cacheKey, artist, song, searchResult)
-
-    return searchResult
-  }
-
-  async getLyrics(songId) {
-    const cachedLyrics = await this._getCachedLyrics(songId)
-    if (cachedLyrics) {
-      console.log('📦 Database cache hit for lyrics, song ID:', songId)
-      return { lyrics: cachedLyrics }
-    }
-
-    console.log('🔍 Database cache miss for lyrics, fetching from Genius')
-
-    const lyrics = await this._fetchLyricsFromGenius(songId)
-
-    if (lyrics) {
-      await this._cacheLyrics(songId, lyrics)
-      return { lyrics }
-    }
-
-    return null
-  }
-
-  async _getCachedSearch(cacheKey) {
-    const cachedResult = await models.LyricsCache.findOne({
-      where: { cacheKey },
-    })
-
-    if (!cachedResult) {
-      return null
-    }
-
-    const isExpired =
-      Date.now() - new Date(cachedResult.timestamp).getTime() > config.cache.ttl
-    return isExpired ? null : cachedResult
-  }
-
-  async _getCachedLyrics(songId) {
-    const { Sequelize } = require('sequelize')
-    const cachedLyrics = await models.LyricsCache.findOne({
-      where: {
-        songId: songId.toString(),
-        lyrics: { [Sequelize.Op.ne]: null },
-      },
-    })
-
-    return cachedLyrics?.lyrics || null
-  }
-
-  async _searchOnGenius(artist, song) {
-    const searchQueries = this._generateSearchQueries(artist, song)
-
-    for (const query of searchQueries) {
+    for (const query of queries) {
       const result = await this.geniusClient.search(query)
       if (result) {
+        // Save to cache for future lookups
+        try {
+          await LyricsCache.upsert({
+            songId: result.id,
+            artist: artist.trim(),
+            song: song.trim(),
+            timestamp: new Date(),
+          })
+        } catch (error) {
+          this.logger.error('Error caching song search result:', error)
+        }
+
         return {
           songId: result.id,
-          found: true,
           title: result.title,
           artist: result.artist,
         }
       }
     }
 
-    return { found: false }
+    // Nothing found - cache the miss
+    try {
+      await LyricsCache.upsert({
+        songId: 'unknown',
+        artist: artist.trim(),
+        song: song.trim(),
+        timestamp: new Date(),
+      })
+    } catch (error) {
+      this.logger.error('Error caching song search miss:', error)
+    }
+
+    return null
+  }
+
+  async _processTrack(track) {
+    // Check if we have lyrics in the cache
+    try {
+      const cachedEntry = await LyricsCache.findOne({
+        where: {
+          artist: track.artist.trim(),
+          song: track.song.trim(),
+        },
+      })
+
+      if (cachedEntry?.lyrics) {
+        this.logger.log(
+          `📦 Cache hit for lyrics: ${track.artist} - ${track.song}`
+        )
+        return { track, lyrics: cachedEntry.lyrics }
+      }
+
+      // If we have a cache entry but no lyrics, it means we previously couldn't find lyrics
+      if (cachedEntry && cachedEntry.lyrics === null) {
+        this.logger.log(
+          `📦 Cache hit (no lyrics): ${track.artist} - ${track.song}`
+        )
+        return null
+      }
+    } catch (error) {
+      this.logger.error('Error checking lyrics cache:', error)
+    }
+
+    // Not in cache, proceed with normal search and fetch
+    this.logger.log(
+      `🔍 Fetching fresh lyrics for: ${track.artist} - ${track.song}`
+    )
+    const searchResult = await this.searchSong(track.artist, track.song)
+    if (!searchResult?.songId) {
+      return null
+    }
+
+    const lyrics = await this._fetchLyricsFromGenius(searchResult.songId)
+
+    // Cache the result regardless of whether lyrics were found
+    try {
+      await LyricsCache.upsert({
+        songId: searchResult.songId,
+        artist: track.artist.trim(),
+        song: track.song.trim(),
+        lyrics: lyrics,
+        timestamp: new Date(),
+      })
+      this.logger.log(`💾 Cached lyrics for: ${track.artist} - ${track.song}`)
+    } catch (error) {
+      this.logger.error('Error caching lyrics:', error)
+    }
+
+    if (!lyrics) {
+      return null
+    }
+
+    return { track, lyrics }
   }
 
   async _fetchLyricsFromGenius(songId) {
     const songInfo = await this.geniusClient.getSong(songId)
-    if (!songInfo) {
+    if (!songInfo?.url) {
       return null
     }
 
-    const pageResponse = await needle('get', songInfo.url)
-    return this.lyricsExtractor.extract(pageResponse.body)
-  }
-
-  async _cacheSearchResult(cacheKey, artist, song, result) {
-    await models.LyricsCache.upsert({
-      cacheKey,
-      artist: result.artist || artist,
-      song: result.title || song,
-      songId: result.songId?.toString(),
-      found: result.found,
-      timestamp: new Date(),
-    })
-  }
-
-  async _cacheLyrics(songId, lyrics) {
-    const existingEntry = await models.LyricsCache.findOne({
-      where: { songId: songId.toString() },
-    })
-
-    if (existingEntry) {
-      await existingEntry.update({
-        lyrics,
-        timestamp: new Date(),
-      })
-    } else {
-      const generatedCacheKey = `songid-${songId}-${generateRandomString(8)}`
-
-      await models.LyricsCache.create({
-        cacheKey: generatedCacheKey,
-        songId: songId.toString(),
-        lyrics,
-        found: true,
-        timestamp: new Date(),
-      })
-    }
-  }
-
-  _generateSearchQueries(artist, song) {
-    return [
-      `${song} ${artist}`,
-      `${song.replace(/\s*\([^)]*\)/g, '')} ${artist}`,
-      `${artist} ${song}`,
-      song,
-    ]
-  }
-
-  _formatSearchResult(cachedResult) {
-    return {
-      songId: cachedResult.songId,
-      found: cachedResult.found,
-      title: cachedResult.song,
-      artist: cachedResult.artist,
-    }
+    const response = await this.httpClient.get(songInfo.url)
+    return this.lyricsExtractor.extract(response.body)
   }
 }
 
-module.exports = { LyricsService }
+module.exports = LyricsService
+module.exports.default = LyricsService
+module.exports.LyricsService = LyricsService
