@@ -2,8 +2,6 @@
 
 A lot of unproductive words are in most of the current songs. If you want to have a clean playlist with none of such words, start using Spotify Playlist Keyword Filter. Maybe you have an addiction or little respect for women then listening to selected music can be benefiting.
 
-Currently, the app is still in work.
-
 ## Features
 
 - Connect to your Spotify account
@@ -13,40 +11,6 @@ Currently, the app is still in work.
 - Clean playlist management
 - Persistent lyrics caching with SQLite database
 - Modular architecture with proper separation of concerns
-
-## Architecture
-
-The application has been refactored into a modular structure:
-
-```
-src/
-├── app.js                 # Main application setup
-├── config/               # Configuration management
-│   ├── index.js         # Main config file
-│   └── validation.js    # Environment validation
-├── database/            # Database layer
-│   ├── connection.js    # SQLite connection
-│   ├── index.js        # Database initialization
-│   └── models/         # Sequelize models
-├── middleware/          # Express middleware
-│   ├── auth.js         # Authentication middleware
-│   ├── error-handler.js # Error handling
-│   └── index.js        # Middleware setup
-├── routes/             # Route handlers
-│   ├── auth.js         # Authentication routes
-│   ├── lyrics.js       # Lyrics API routes
-│   ├── static.js       # Static file serving
-│   └── index.js        # Route setup
-├── services/           # Business logic
-│   ├── lyrics.js       # Lyrics processing
-│   └── spotify-auth.js # Spotify authentication
-├── clients/            # External API clients
-│   └── genius-api.js   # Genius API client
-└── utils/              # Utility functions
-  ├── cache-key-generator.js
-  ├── crypto.js
-  └── lyrics-extractor.js
-```
 
 ## Prerequisites
 
@@ -73,20 +37,7 @@ Copy the example environment file and configure your credentials:
 cp .env.example .env
 ```
 
-Update the `.env` file with your actual credentials:
-
-```env
-GENIUS_APP_URL="http://localhost:8888"
-GENIUS_CLIENT_ID="your_genius_client_id_here"
-GENIUS_CLIENT_SECRET="your_genius_client_secret_here"
-GENIUS_CLIENT_ACCESS_TOKEN="your_genius_access_token_here"
-
-SPOTIFY_CLIENT_ID="your_spotify_client_id_here"
-SPOTIFY_CLIENT_SECRET="your_spotify_client_secret_here"
-SPOTIFY_REDIRECT_URI="http://localhost:8888/callback/"
-
-NODE_ENV="development"
-```
+Update the `.env` file with your actual credentials.
 
 ### 2. Spotify API Credentials
 
@@ -106,25 +57,10 @@ NODE_ENV="development"
 Start the development server:
 
 ```bash
-npm start
+npm dev
 ```
 
 The application will be available at `http://localhost:8888`
-
-## API Endpoints
-
-### Authentication
-
-- `GET /login` - Initiate Spotify OAuth flow
-- `GET /callback` - Handle Spotify OAuth callback
-- `GET /refresh_token` - Refresh access token
-
-### Lyrics
-
-- `GET /api/lyrics/search?artist=<artist>&song=<song>` - Search for song lyrics
-- `GET /api/lyrics/:songId` - Get lyrics for a specific song
-
-The application uses SQLite for caching lyrics data. The database file (`lyrics_cache.sqlite`) is automatically created in the root directory on first run.
 
 ## Development
 
@@ -133,7 +69,7 @@ The codebase follows a modular architecture with clear separation of concerns:
 - **Services**: Handle business logic and external API interactions
 - **Routes**: Define API endpoints and request handling
 - **Middleware**: Handle cross-cutting concerns like authentication and error handling
-- **Models**: Define database schemas and operations
+- **Database**: Define database schemas and operations
 - **Clients**: Encapsulate external API communication
 - **Utils**: Provide reusable utility functions
 
@@ -141,9 +77,7 @@ The codebase follows a modular architecture with clear separation of concerns:
 
 The application includes intelligent caching to reduce API calls:
 
-- Search results are cached for 24 hours
 - Lyrics are permanently cached once fetched
-- Cache keys are generated based on normalized artist and song names
 
 ## Error Handling
 
