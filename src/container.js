@@ -16,7 +16,8 @@ const lyricsExtractor = new LyricsExtractor(he, logger)
 const lyricsService = new LyricsService(
   geniusClient,
   lyricsExtractor,
-  httpClient
+  httpClient,
+  logger
 )
 const spotifyAuthService = new SpotifyAuthService(logger, config, httpClient)
 const spotifyApiClient = new SpotifyApiClient(httpClient, config)
