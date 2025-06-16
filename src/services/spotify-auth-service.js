@@ -70,8 +70,6 @@ class SpotifyAuthService {
     this.logger.log('  - Received state:', state)
     this.logger.log('  - Stored state:', storedState)
     this.logger.log('  - State key:', this.stateKey)
-    this.logger.log('  - All cookies:', req.cookies)
-    this.logger.log('  - Query params:', req.query)
 
     if (error) {
       this.logger.error('Spotify authorization error:', error)

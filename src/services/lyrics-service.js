@@ -1,7 +1,5 @@
-const LyricsCache = require('../cache/lyrics-cache-model.js')
-
 class LyricsService {
-  constructor(geniusClient, lyricsExtractor, httpClient, logger) {
+  constructor(geniusClient, lyricsExtractor, httpClient, logger, lyricsModel) {
     if (!geniusClient) {
       throw new Error('No genius client provided to LyricsService!')
     }
@@ -18,10 +16,15 @@ class LyricsService {
       throw new Error('No logger provided to LyricsService!')
     }
 
+    if (!lyricsModel) {
+      throw new Error('No lyrics cache model provided to LyricsService!')
+    }
+
     this.geniusClient = geniusClient
     this.lyricsExtractor = lyricsExtractor
     this.httpClient = httpClient
     this.logger = logger
+    this.lyricsModel = lyricsModel
   }
 
   async * processTracksBatch(tracks) {
@@ -46,7 +49,7 @@ class LyricsService {
   async searchSong(artist, song) {
     // Try to find songId in cache first
     try {
-      const cachedEntry = await LyricsCache.findOne({
+      const cachedEntry = await this.lyricsCache.findOne({
         where: {
           artist: artist.trim(),
           song: song.trim(),
@@ -79,7 +82,7 @@ class LyricsService {
       if (result) {
         // Save to cache for future lookups
         try {
-          await LyricsCache.upsert({
+          await this.lyricsCache.upsert({
             songId: result.id,
             artist: artist.trim(),
             song: song.trim(),
@@ -99,7 +102,7 @@ class LyricsService {
 
     // Nothing found - cache the miss
     try {
-      await LyricsCache.upsert({
+      await this.lyricsCache.upsert({
         songId: 'unknown',
         artist: artist.trim(),
         song: song.trim(),
@@ -115,7 +118,7 @@ class LyricsService {
   async _processTrack(track) {
     // Check if we have lyrics in the cache
     try {
-      const cachedEntry = await LyricsCache.findOne({
+      const cachedEntry = await this.lyricsCache.findOne({
         where: {
           artist: track.artist.trim(),
           song: track.song.trim(),
@@ -153,7 +156,7 @@ class LyricsService {
 
     // Cache the result regardless of whether lyrics were found
     try {
-      await LyricsCache.upsert({
+      await this.lyricsCache.upsert({
         songId: searchResult.songId,
         artist: track.artist.trim(),
         song: track.song.trim(),

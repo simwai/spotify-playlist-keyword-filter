@@ -20,10 +20,13 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "jest-environment-jsdom": "^30.0.0",
     "@simwai/utils": "^2.0.6",
+    "@types/jest": "^29.5.14",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-json": "^4.0.1",
+    "jest": "^30.0.0",
     "kill-port": "^2.0.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.0.0",
@@ -49,6 +52,8 @@
     "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
     "build": "npm install",
     "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
-    "kill": "kill-port 8888"
+    "kill": "kill-port 8888",
+    "test": "jest",
+    "test-watch": "jest --watch"
   }
 }

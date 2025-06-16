@@ -1,6 +1,6 @@
 const path = require('node:path')
 const { Sequelize } = require('sequelize')
-
+const { ConsoleLogger } = require('@simwai/utils')
 const storage = path.join(__dirname, '../../lyrics_cache.db')
 
 const sequelize = new Sequelize({
@@ -11,14 +11,16 @@ const sequelize = new Sequelize({
 
 // Initialize the database
 const initializeDatabase = async () => {
+  const logger = new ConsoleLogger()
+
   try {
     await sequelize.authenticate()
-    console.log('✅ Database connection established successfully')
+    logger.log('✅ Database connection established successfully')
 
     await sequelize.sync()
-    console.log('✅ Database synchronized')
+    logger.log('✅ Database synchronized')
   } catch (error) {
-    console.error('❌ Database initialization failed:', error)
+    logger.error('❌ Database initialization failed:', error)
   }
 }
 
