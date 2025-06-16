@@ -1,3 +1,4 @@
+// TODO Add backend tests
 const express = require('express')
 
 const { setupMiddleware } = require('./middleware/index.js')
@@ -7,25 +8,28 @@ const {
   notFoundHandler,
 } = require('./middleware/error-handler.js')
 const config = require('./config/index.js')
-
-// This import instantiates our container that does some main orchestration
-const { container } = require('./container.js')
+const { createContainer } = require('./container.js')
 
 const _removePortInUrl = (url) => {
   return url.replace(/:\d+/, '')
 }
 
 // Main / Index
-const app = express()
+async function run() {
+  const app = express()
+  const container = await createContainer()
 
-setupMiddleware(app)
-setupRoutes(app, container)
+  setupMiddleware(app)
+  setupRoutes(app, container)
 
-app.use(notFoundHandler)
-app.use(errorHandler)
+  app.use(notFoundHandler)
+  app.use(errorHandler)
 
-app.listen(config.app.port, () => {
-  container.logger.log(
-    `🚀 Server running on ${_removePortInUrl(config.app.frontendUrl)}:${config.app.port}`
-  )
-})
+  app.listen(config.app.port, () => {
+    container.logger.log(
+      `🚀 Server running on ${_removePortInUrl(config.app.frontendUrl)}:${config.app.port}`
+    )
+  })
+}
+
+run()
