@@ -9,6 +9,7 @@ const {
 } = require('./middleware/error-handler.js')
 const config = require('./config/index.js')
 const { createContainer } = require('./container.js')
+const { initializeDatabase } = require('./cache/index.js')
 
 const _removePortInUrl = (url) => {
   return url.replace(/:\d+/, '')
@@ -18,6 +19,8 @@ const _removePortInUrl = (url) => {
 async function run() {
   const app = express()
   const container = await createContainer()
+
+  await initializeDatabase(container.logger)
 
   setupMiddleware(app)
   setupRoutes(app, container)
