@@ -91,12 +91,13 @@ class SpotifyAuthService {
 
     try {
       const tokens = await this._exchangeCodeForTokens(code)
-
       const userProfile = await this._fetchUserProfile(tokens.access_token)
 
       this.uid = userProfile.id
       this.refreshToken = tokens.refresh_token
+
       this.logger.log('👤 User authenticated successfully')
+
       return this._buildRedirectUrl(tokens)
     } catch (exchangeError) {
       this.logger.error('Token exchange failed:', exchangeError)

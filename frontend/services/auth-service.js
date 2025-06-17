@@ -35,7 +35,6 @@ class AuthService {
     this._clearStoredTokens()
   }
 
-  // Private methods following SLAP principle
   _parseHashParams() {
     const hashString = window.location.hash.substring(1)
     const pairs = hashString.split('&')
@@ -54,6 +53,7 @@ class AuthService {
   _storeTokensFromParams(hashParams) {
     if (hashParams.access_token) {
       this.accessToken = hashParams.access_token
+
       try {
         sessionStorage.setItem('spotify_access_token', this.accessToken)
       } catch (error) {
@@ -63,6 +63,7 @@ class AuthService {
 
     if (hashParams.refresh_token) {
       this.refreshToken = hashParams.refresh_token
+
       try {
         sessionStorage.setItem('spotify_refresh_token', this.refreshToken)
       } catch (error) {

@@ -49,7 +49,7 @@ class LyricsService {
   async searchSong(artist, song) {
     // Try to find songId in cache first
     try {
-      const cachedEntry = await this.lyricsCache.findOne({
+      const cachedEntry = await this.lyricsModel.findOne({
         where: {
           artist: artist.trim(),
           song: song.trim(),
@@ -82,7 +82,7 @@ class LyricsService {
       if (result) {
         // Save to cache for future lookups
         try {
-          await this.lyricsCache.upsert({
+          await this.lyricsModel.upsert({
             songId: result.id,
             artist: artist.trim(),
             song: song.trim(),
@@ -102,7 +102,7 @@ class LyricsService {
 
     // Nothing found - cache the miss
     try {
-      await this.lyricsCache.upsert({
+      await this.lyricsModel.upsert({
         songId: 'unknown',
         artist: artist.trim(),
         song: song.trim(),
@@ -118,7 +118,7 @@ class LyricsService {
   async _processTrack(track) {
     // Check if we have lyrics in the cache
     try {
-      const cachedEntry = await this.lyricsCache.findOne({
+      const cachedEntry = await this.lyricsModel.findOne({
         where: {
           artist: track.artist.trim(),
           song: track.song.trim(),
@@ -156,7 +156,7 @@ class LyricsService {
 
     // Cache the result regardless of whether lyrics were found
     try {
-      await this.lyricsCache.upsert({
+      await this.lyricsModel.upsert({
         songId: searchResult.songId,
         artist: track.artist.trim(),
         song: track.song.trim(),

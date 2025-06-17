@@ -35,9 +35,6 @@
   <!-- UnoCSS Runtime -->
   <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime" fetchpriority="high"></script>
 
-  <!-- Tablesort for sortable tables -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/sorts/tablesort.number.min.js"></script>
 
   <!-- <link rel="stylesheet" href="./index.css" /> -->
 
@@ -153,6 +150,11 @@
     #playlists tbody tr.selected {
       background-color: rgba(29, 185, 84, 0.1);
       border-left: 3px solid var(--spotify-green);
+    }
+
+    #playlists img {
+      width: 140px;
+      height: auto;
     }
 
     /* Filter mode styling with better hover effects */
@@ -342,8 +344,9 @@
             <table id="playlists">
               <thead>
                 <tr>
-                  <th role="columnheader" class="w-2/3">Name</th>
-                  <th role="columnheader" class="w-1/3" data-sort-method="number">
+                  <th role="columnheader">Cover</th>
+                  <th role="columnheader" data-sort="name">Name</th>
+                  <th role="columnheader" data-sort="tracks.total" data-sort-method="number">
                     Track Count
                   </th>
                 </tr>

@@ -1,427 +1,148 @@
+// Acts as the central "controller". It initializes everything,
+// owns the application state, and defines all actions that can modify that state.
+
 import AuthService from './services/auth-service.js'
 import SpotifyApiService from './services/spotify-api-service.js'
-import UiManager from './services/ui-manager.js'
+import LyricsService from './services/lyrics-service.js'
+import UiManager from './ui-manager.js'
+import SpotifyPlaylistFilter from './spotify-playlist-filter.js'
+import { createObservable } from './create-observable.js'
 
-class SpotifyPlaylistFilter {
-  constructor(authService, spotifyApiService, uiManager) {
-    if (!authService) {
-      throw new Error('No auth service provided to SpotifyPlaylistFilter!')
-    }
+function main() {
+  // --- 1. Constants & Services (No local dependencies) ---
+  const filterModeEnum = { EXCLUDE: 'exclude', INCLUDE: 'include' }
+  Object.freeze(filterModeEnum)
 
-    if (!spotifyApiService) {
-      throw new Error(
-        'No Spotify API service provided to SpotifyPlaylistFilter!'
-      )
-    }
+  const authService = new AuthService()
+  const lyricsService = new LyricsService()
+  const spotifyApiService = new SpotifyApiService(authService)
+  const uiManager = new UiManager(spotifyApiService, authService)
 
-    if (!uiManager) {
-      throw new Error('No UI manager provided to SpotifyPlaylistFilter!')
-    }
-
-    this.filterMode = 'exclude'
-    this.tableSort = null
-
-    this.authService = authService
-    this.spotifyApiService = spotifyApiService
-    this.uiManager = uiManager
-
-    this.initializeApp()
-  }
-
-  initializeApp() {
-    this.authService.parseUrlParams()
-    this.setupEventListeners()
-    this.updateUI()
-  }
-
-  _renderKeywordsWithCurrentMode() {
-    this.uiManager.renderKeywords(this.filterMode)
-  }
-
-  setupEventListeners() {
-    const addButton = document.getElementById('add-button')
-    const tagInput = document.getElementById('tag-input')
-    const startButton = document.getElementById('start-button')
-
-    addButton?.addEventListener('click', () => {
-      this.uiManager.addKeyword()
-      this._renderKeywordsWithCurrentMode()
-    })
-    tagInput?.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter') {
-        this.uiManager.addKeyword()
-        this._renderKeywordsWithCurrentMode()
-      }
-    })
-    startButton?.addEventListener('click', () => this.startFiltering())
-
-    const filterModeInputs = document.querySelectorAll(
-      'input[name="filter-mode"]'
-    )
-    for (const input of filterModeInputs) {
-      input.addEventListener('change', (event) => {
-        this.filterMode = event.target.value?.toLowerCase()
-        this._renderKeywordsWithCurrentMode()
-      })
-    }
-
-    const backButton = document.getElementById('back-to-playlists-button')
-    backButton?.addEventListener('click', () => {
-      this.uiManager.navigateTo('playlist-selection')
-    })
-  }
-
-  async updateUI() {
-    if (!this.authService.isAuthenticated()) {
-      this.uiManager.navigateTo('login')
+  // --- 2. Rendering Function ---
+  const renderApp = () => {
+    const state = window.appState
+    if (!state) {
       return
     }
 
-    if (this.authService.userId) {
-      await this.uiManager.loadPlaylists(
-        this.spotifyApiService,
-        this.authService
-      )
-      this._renderKeywordsWithCurrentMode()
-      return
-    }
-
-    try {
-      const userData = await this.spotifyApiService.getUser()
-      this.authService.userId = userData.id
-
-      try {
-        sessionStorage.setItem('spotify_user_id', this.authService.userId)
-      } catch (e) {
-        console.warn('Failed to store uid from /me in sessionStorage', e)
-      }
-
-      await this.uiManager.loadPlaylists(
-        this.spotifyApiService,
-        this.authService
-      )
-      this._renderKeywordsWithCurrentMode()
-    } catch (error) {
-      this.authService.clearAuthData()
-      this.uiManager.navigateTo('login')
-      this.uiManager.showError(
-        'Session expired or token invalid. Please log in again.'
-      )
-    }
-  }
-
-  async startFiltering() {
-    if (!this.uiManager.selectedPlaylist) {
-      this.uiManager.showError('Please select a playlist.')
-      return
-    }
-
-    if (this.uiManager.keywords.length === 0) {
-      this.uiManager.showError('Please add keywords.')
-      return
-    }
+    uiManager.renderKeywords(state.keywords, state.filterMode)
 
     const startButton = document.getElementById('start-button')
     if (startButton) {
-      startButton.disabled = true
-      startButton.classList.add('opacity-70')
-    }
-
-    this.uiManager.updateResultOutput(`
-      <div class="flex items-center justify-center py-4 gap-3">
-        <div class="inline-flex items-center justify-center w-6 h-6 border-2 border-t-transparent border-spotify-green rounded-full animate-spin" role="status"></div>
-        <span class="text-gray-800">🚀 Starting filter process...</span>
-      </div>
-    `)
-
-    try {
-      let processedTrackCount = 0
-      let totalFilteredOutCount = 0
-      const allTracksToKeep = []
-      const BATCH_SIZE_PROCESSING = 10
-      let currentProcessingBatch = []
-      let batchNumber = 0
-
-      const trackGenerator = this._fetchPlaylistTracksGenerator()
-
-      for await (const track of trackGenerator) {
-        currentProcessingBatch.push(track)
-        processedTrackCount++
-
-        if (
-          currentProcessingBatch.length >= BATCH_SIZE_PROCESSING ||
-          processedTrackCount === this.uiManager.selectedPlaylist.tracks.total
-        ) {
-          batchNumber++
-          this.uiManager.updateResultOutput(
-            `<span>🔄 Processing batch ${batchNumber} of tracks for lyrics & filtering... (Processed: ${processedTrackCount}/${this.uiManager.selectedPlaylist.tracks.total})</span>`
-          )
-
-          const batchResult = await this._processTrackBatch(
-            currentProcessingBatch,
-            batchNumber
-          )
-          allTracksToKeep.push(...batchResult.tracksToKeep)
-          totalFilteredOutCount += batchResult.filteredOutCountInBatch
-          currentProcessingBatch = []
-
-          this.uiManager.updateResultOutput(
-            `<span>🔄 Processed: ${processedTrackCount}/${this.uiManager.selectedPlaylist.tracks.total} | Kept so far: ${allTracksToKeep.length} | Filtered out: ${totalFilteredOutCount}</span>`
-          )
-        }
-      }
-      if (currentProcessingBatch.length > 0) {
-        batchNumber++
-        this.uiManager.updateResultOutput(
-          `<span>🔄 Processing final batch ${batchNumber} of tracks... (Processed: ${processedTrackCount}/${this.uiManager.selectedPlaylist.tracks.total})</span>`
-        )
-
-        const batchResult = await this._processTrackBatch(
-          currentProcessingBatch,
-          batchNumber
-        )
-        allTracksToKeep.push(...batchResult.tracksToKeep)
-        totalFilteredOutCount += batchResult.filteredOutCountInBatch
-
-        this.uiManager.updateResultOutput(
-          `<span>🏁 Track processing complete. Total Processed: ${processedTrackCount} | Total Kept: ${allTracksToKeep.length} | Total Filtered Out: ${totalFilteredOutCount}</span>`
-        )
-      }
-
-      if (allTracksToKeep.length > 0) {
-        const newPlaylist = await this._createFilteredPlaylist()
-        if (newPlaylist && newPlaylist.id) {
-          const trackUrisToKeep = allTracksToKeep
-            .map((track) => track.uri)
-            .filter((uri) => this._isValidSpotifyUri(uri))
-
-          console.log(
-            `📊 Track URI validation: ${allTracksToKeep.length} tracks -> ${trackUrisToKeep.length} valid URIs`
-          )
-
-          if (trackUrisToKeep.length > 0) {
-            await this.spotifyApiService.addTracksToPlaylist(
-              newPlaylist.id,
-              trackUrisToKeep
-            )
-
-            const invalidUriCount =
-              allTracksToKeep.length - trackUrisToKeep.length
-            const successMessage = `✅ Filtering complete! New playlist "${newPlaylist.name}" created with ${trackUrisToKeep.length} tracks. ${totalFilteredOutCount} tracks were filtered out.`
-            const invalidUriMessage =
-              invalidUriCount > 0
-                ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)`
-                : ''
-
-            this.uiManager.showSuccess(
-              successMessage +
-                invalidUriMessage +
-                ` <a href="${newPlaylist.external_urls.spotify}" target="_blank" class="text-spotify-green hover:underline">Open Playlist</a>`
-            )
-          } else {
-            this.uiManager.showError(
-              'No valid track URIs found. Unable to create playlist.'
-            )
-          }
-        }
-      } else {
-        this.uiManager.showSuccess(
-          `ℹ️ Filtering complete. No tracks matched your criteria to be kept. ${totalFilteredOutCount} tracks were filtered out.`
-        )
-      }
-    } catch (error) {
-      console.error('❌ Filtering process failed:', error)
-      this.uiManager.showError(
-        `Filtering process failed: ${error.message || 'An unknown error occurred.'}`
-      )
-    } finally {
-      if (startButton) {
-        startButton.disabled = false
-        startButton.classList.remove('opacity-70')
-      }
+      startButton.classList.toggle('hidden', state.keywords.length === 0)
     }
   }
 
-  async * _fetchPlaylistTracksGenerator() {
-    if (!this.uiManager.selectedPlaylist || !this.authService.userId) {
-      throw new Error('Playlist or User ID not selected for fetching tracks.')
-    }
+  // --- 3. Central State ---
+  const initialAppState = {
+    keywords: [],
+    filterMode: filterModeEnum.EXCLUDE,
+    selectedPlaylist: null,
+    playlists: [],
+  }
+  const appState = createObservable(initialAppState, () => renderApp())
+  window.appState = appState
 
-    const endpoint = `/playlists/${this.uiManager.selectedPlaylist.id}/tracks`
-    let offset = 0
-    const limit = 50
-    let hasMoreData = true
-    let batchCount = 0
-    let totalFetched = 0
+  // --- 4. State-Dependent Services ---
+  const spotifyPlaylistFilter = new SpotifyPlaylistFilter(
+    spotifyApiService,
+    lyricsService,
+    uiManager
+  )
 
-    console.log(
-      `📥 Starting to fetch tracks from playlist: ${this.uiManager.selectedPlaylist.name}`
-    )
-    this.uiManager.updateResultOutput(
-      `<span>🔄 Fetching tracks from "${this.uiManager.selectedPlaylist.name}"...</span>`
-    )
-
-    while (hasMoreData) {
-      batchCount++
-      console.log(`📡 Fetching tracks batch ${batchCount} (offset: ${offset})`)
-
-      try {
-        const params = {
-          limit: limit,
-          offset: offset,
-          fields: 'items(track(name,artists(name),uri,id)),next',
-        }
-
-        const response = await this.spotifyApiService._apiRequest(
-          endpoint,
-          'GET',
-          null,
-          params
-        )
-        const items = response.items
-
-        if (!items) {
-          console.error('No items received!')
-          hasMoreData = false
-          continue
-        }
-
-        const validItems = items.filter((trackItem) =>
-          this._isValidSpotifyUri(trackItem.track.uri)
-        )
-
-        totalFetched += validItems.length
-        console.log(
-          `✅ Batch ${batchCount}: Got ${validItems.length} valid tracks (total: ${totalFetched})`
-        )
-
-        this.uiManager.updateResultOutput(
-          `<span>🔄 Fetched ${totalFetched} / ${this.uiManager.selectedPlaylist.tracks.total} tracks...</span>`
-        )
-
-        for (const trackItem of validItems) {
-          yield trackItem.track
-        }
-
-        offset += items.length
-        if (!response.next) {
-          hasMoreData = false
-          console.log(
-            `🏁 Reached end of playlist - total valid tracks: ${totalFetched}`
-          )
-        }
-      } catch (error) {
-        console.error(`❌ Error fetching tracks batch ${batchCount}:`, error)
-        this.uiManager.showError(
-          `Error fetching playlist tracks: ${error.message}`
-        )
-        hasMoreData = false
-      }
+  // --- 5. Actions (The only functions that should modify appState) ---
+  const addKeyword = () => {
+    const tagInput = document.getElementById('tag-input')
+    const newKeyword = tagInput.value.trim().toLowerCase()
+    if (newKeyword && !appState.keywords.includes(newKeyword)) {
+      appState.keywords.push(newKeyword)
+      tagInput.value = ''
     }
   }
 
-  async _processTrackBatch(trackBatch, batchNumber) {
-    console.log(
-      `🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks with bulk API`
-    )
+  const removeKeyword = (indexToRemove) => {
+    if (indexToRemove >= 0 && indexToRemove < appState.keywords.length) {
+      appState.keywords.splice(indexToRemove, 1)
+    }
+  }
 
-    try {
-      const apiBaseUrl = window.location.origin
-      const requestPayload = {
-        tracks: trackBatch.map((track) => ({
-          name: track.name,
-          artists: track.artists,
-          uri: track.uri,
-          id: track.id,
-        })),
+  const selectPlaylist = (playlist, rowElement) => {
+    // Update the central state
+    appState.selectedPlaylist = playlist
+
+    // Update the UI to show the selection
+    const allRows = document.querySelectorAll('#playlists tbody tr')
+    for (const row of allRows) {
+      row.classList.remove('selected')
+    }
+    rowElement.classList.add('selected')
+
+    // Navigate to the next step
+    uiManager.navigateTo('tag-form', { playlist })
+  }
+
+  // --- 6. Event Listener Registration ---
+  const registerEventListeners = () => {
+    document.getElementById('login-button')?.addEventListener('click', () => {
+      window.location.href = '/login'
+    })
+
+    document.getElementById('add-button')?.addEventListener('click', addKeyword)
+
+    document.getElementById('tag-input')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        addKeyword()
       }
+    })
 
-      const response = await fetch(`${apiBaseUrl}/api/lyrics/bulk-process`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestPayload),
+    // Event Delegation for removing keywords from the dynamic list
+    document.getElementById('tags')?.addEventListener('click', (event) => {
+      const removeButton = event.target.closest('.remove-tag')
+      if (removeButton) {
+        event.preventDefault()
+        const index = parseInt(removeButton.dataset.index, 10)
+        removeKeyword(index)
+      }
+    })
+
+    document.getElementById('start-button')?.addEventListener('click', () => {
+      spotifyPlaylistFilter.initializeFilterProcess()
+    })
+
+    document.querySelectorAll('input[name="filter-mode"]')?.forEach((input) => {
+      input.addEventListener('change', (event) => {
+        appState.filterMode = event.target.value
       })
+    })
 
-      if (!response.ok) {
-        throw new Error(`Bulk processing failed: ${response.status}`)
-      }
-
-      const bulkResult = await response.json()
-      const tracksToKeep = []
-      let filteredOutCountInBatch = 0
-
-      for (const result of bulkResult.data) {
-        const { track, lyrics } = result
-
-        if (!lyrics) {
-          console.log(
-            `🚫 Lyrics not found for "${track.song}" by ${track.artist}. Skipping track.`
-          )
-          filteredOutCountInBatch++
-          continue
-        }
-
-        const isKeywordInLyrics = this.checkKeywordInLyrics(lyrics)
-
-        if (this.filterMode === 'exclude') {
-          if (isKeywordInLyrics) {
-            console.log(
-              `🚫 EXCLUDE mode: Filtering out "${track.song}" by ${track.artist} (matches keyword).`
-            )
-            filteredOutCountInBatch++
-          } else {
-            console.log(
-              `✅ EXCLUDE mode: Keeping "${track.song}" by ${track.artist}.`
-            )
-            tracksToKeep.push(track)
-          }
-        } else if (this.filterMode === 'include') {
-          if (isKeywordInLyrics) {
-            tracksToKeep.push(track)
-          } else {
-            filteredOutCountInBatch++
-          }
-        }
-      }
-
-      const processedTrackIds = new Set(bulkResult.data.map((r) => r.track.id))
-      const unprocessedTracks = trackBatch.filter(
-        (track) => !processedTrackIds.has(track.id)
-      )
-      filteredOutCountInBatch += unprocessedTracks.length
-
-      console.log(
-        `✅ Batch ${batchNumber} completed - Kept: ${tracksToKeep.length}, Filtered out: ${filteredOutCountInBatch}`
-      )
-      return { tracksToKeep, filteredOutCountInBatch }
-    } catch (error) {
-      console.error(
-        `❌ Bulk processing failed for batch ${batchNumber}:`,
-        error
-      )
-      throw error
-    }
+    document
+      .getElementById('back-to-playlists-button')
+      ?.addEventListener('click', () => {
+        uiManager.navigateTo('playlist-selection')
+      })
   }
 
-  checkKeywordInLyrics(lyrics) {
-    const lowerCaseLyrics = lyrics.toLowerCase()
-    for (const keyword of this.uiManager.keywords) {
-      if (lowerCaseLyrics.includes(keyword.toLowerCase())) {
-        return true
-      }
+  // --- 7. App Initialization ---
+  const initializeApp = async () => {
+    registerEventListeners()
+    authService.parseUrlParams()
+
+    if (authService.accessToken) {
+      uiManager.navigateTo('logged-in')
+
+      await uiManager.loadPlaylists()
+
+      appState.playlists = uiManager.playlists
+
+      uiManager.renderPlaylists(selectPlaylist, appState.selectedPlaylist)
+    } else {
+      uiManager.navigateTo('login')
     }
-    return false
+    renderApp(appState)
   }
+
+  initializeApp()
 }
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-  const authService = new AuthService()
-  const spotifyApiService = new SpotifyApiService(authService)
-
-  const uiManager = new UiManager(spotifyApiService, authService)
-
-  new SpotifyPlaylistFilter(authService, spotifyApiService, uiManager)
-})
+document.addEventListener('DOMContentLoaded', main)

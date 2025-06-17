@@ -3,7 +3,9 @@ dist
 *.sqlite
 *.db
 *.old
+.clinic
 lyrics-cache/
+*.db-*
 
 # Environment files
 .env

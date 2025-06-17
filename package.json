@@ -20,13 +20,12 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "jest-environment-jsdom": "^30.0.0",
     "@simwai/utils": "^2.0.8",
-    "@types/jest": "^29.5.14",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-json": "^4.0.1",
     "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "kill-port": "^2.0.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.0.0",
@@ -52,6 +51,7 @@
     "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
     "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
     "kill": "kill-port 8888",
+    "bulk-process-load-test": "npx autocannon -d 30 -c 10 -m POST -H \"Content-Type: application/json\" -b '{\"tracks\":[{\"id\":\"id1\",\"uri\":\"spotify:track:id1\",\"name\":\"Song 1\",\"artists\":[{\"name\":\"Artist\"}]}]}' http://localhost:8888/api/lyrics/bulk-process",
     "test": "jest",
     "test-watch": "jest --watch"
   }
