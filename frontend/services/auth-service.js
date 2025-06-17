@@ -31,7 +31,7 @@ class AuthService {
   clearAuthData() {
     this.accessToken = null
     this.refreshToken = null
-    this.userId = null
+
     this._clearStoredTokens()
   }
 

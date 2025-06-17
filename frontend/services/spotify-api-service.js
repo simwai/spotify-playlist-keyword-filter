@@ -6,6 +6,8 @@ class SpotifyApiService {
 
     this.authService = authService
     this.apiBase = 'https://api.spotify.com/v1'
+    this.isRefreshing = false
+    this.refreshPromise = null
   }
 
   async getUser() {
@@ -81,6 +83,21 @@ class SpotifyApiService {
   }
 
   async _apiRequest(urlOrEndpoint, method = 'GET', body = null) {
+    const makeRequest = () => this._makeRawRequest(urlOrEndpoint, method, body)
+
+    const response = await makeRequest()
+
+    if (response.status === 401) {
+      const refreshed = await this._attemptTokenRefresh()
+      if (refreshed) {
+        return this._makeRawRequest(urlOrEndpoint, method, body)
+      }
+    }
+
+    return this._handleResponse(response)
+  }
+
+  async _makeRawRequest(urlOrEndpoint, method, body) {
     if (!this.authService.isAuthenticated()) {
       this._redirectToLogin('No authentication token available')
       return
@@ -101,8 +118,84 @@ class SpotifyApiService {
       options.body = JSON.stringify(body)
     }
 
-    const response = await fetch(url, options)
-    return this._handleResponse(response)
+    return fetch(url, options)
+  }
+
+  async _attemptTokenRefresh() {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise
+    }
+
+    if (!this.authService.refreshToken) {
+      console.log('🚫 No refresh token available')
+      return false
+    }
+
+    this.isRefreshing = true
+    console.log('🔄 Attempting token refresh...')
+
+    this.refreshPromise = this._performTokenRefresh()
+    const result = await this.refreshPromise
+
+    this.isRefreshing = false
+    this.refreshPromise = null
+
+    return result
+  }
+
+  async _performTokenRefresh() {
+    try {
+      const refreshUrl = `/refresh_token`
+      const response = await fetch(refreshUrl, {
+        method: 'GET',
+        credentials: 'include',
+        redirect: 'manual',
+      })
+
+      if (response.type === 'opaqueredirect' || response.status === 302) {
+        const location = response.headers.get('Location')
+        if (location?.includes('access_token=')) {
+          const tokens = this._parseTokensFromUrl(location)
+          this._updateStoredTokens(tokens)
+          console.log('✅ Token refresh successful')
+          return true
+        }
+      }
+
+      console.log('❌ Token refresh failed')
+      return false
+    } catch (error) {
+      console.error('❌ Token refresh error:', error)
+      return false
+    }
+  }
+
+  _parseTokensFromUrl(url) {
+    const hashPart = url.split('#')[1] || ''
+    const params = new URLSearchParams(hashPart)
+
+    return {
+      access_token: params.get('access_token'),
+      refresh_token: params.get('refresh_token'),
+      uid: params.get('uid'),
+    }
+  }
+
+  _updateStoredTokens(tokens) {
+    if (tokens.access_token) {
+      this.authService.accessToken = tokens.access_token
+      sessionStorage.setItem('spotify_access_token', tokens.access_token)
+    }
+
+    if (tokens.refresh_token) {
+      this.authService.refreshToken = tokens.refresh_token
+      sessionStorage.setItem('spotify_refresh_token', tokens.refresh_token)
+    }
+
+    if (tokens.uid) {
+      this.authService.userId = tokens.uid
+      sessionStorage.setItem('spotify_user_id', tokens.uid)
+    }
   }
 
   async _handleResponse(response) {

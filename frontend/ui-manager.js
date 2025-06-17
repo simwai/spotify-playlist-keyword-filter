@@ -218,7 +218,7 @@ export default class UiManager {
       }
 
       const coverImg = document.createElement('img')
-      coverImg.src = playlist.images[0]?.url || 'placeholder.jpg'
+      coverImg.src = playlist.images?.[0]?.url || 'placeholder.jpg'
       coverImg.alt = playlist.name
 
       coverImg.className =
@@ -308,7 +308,6 @@ export default class UiManager {
 
   showError(message) {
     console.error(message)
-    alert(message)
   }
 
   navigateTo(view, options = {}) {
