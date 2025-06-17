@@ -189,6 +189,8 @@ export default class UiManager {
       document
         .getElementById('back-to-playlists-button')
         ?.classList.add('hidden')
+
+      document.getElementById('playlist-title').textContent = 'Pick a playlist:'
     }
 
     if (view === 'tag-form') {
