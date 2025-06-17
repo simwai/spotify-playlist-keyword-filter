@@ -141,6 +141,7 @@ function main() {
     } else {
       uiManager.navigateTo('login')
     }
+
     renderApp(appState)
   }
 

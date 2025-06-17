@@ -67,13 +67,14 @@ export default class UiManager {
     headerCover.setAttribute('role', 'columnheader')
 
     const headerName = document.createElement('div')
-    headerName.className = 'flex items-center p-4 flex-1'
+    headerName.className = 'flex items-center p-4 flex-1 cursor-pointer'
     headerName.textContent = 'Name'
     headerName.setAttribute('role', 'columnheader')
     headerName.setAttribute('data-sort', 'name')
 
     const headerTracks = document.createElement('div')
-    headerTracks.className = 'flex items-center p-4 w-1/4 md:w-1/6 justify-end'
+    headerTracks.className =
+      'flex items-center p-4 w-1/4 md:w-1/6 justify-end cursor-pointer'
     headerTracks.textContent = 'Track Count'
     headerTracks.setAttribute('role', 'columnheader')
     headerTracks.setAttribute('data-sort', 'tracks.total')
@@ -82,25 +83,38 @@ export default class UiManager {
     const _createSortIndicator = (column) => {
       const indicator = document.createElement('span')
       indicator.className =
-        'inline-flex items-center justify-center ml-2 w-4 h-4 opacity-0 transition-opacity duration-200'
-
-      const icon = document.createElement('i')
-      icon.className =
-        this.tableSort.direction === 'asc'
-          ? 'fas fa-sort-up'
-          : 'fas fa-sort-down'
+        'inline-flex items-center justify-center ml-2 w-4 h-4'
 
       if (this.tableSort.column === column) {
-        indicator.classList.remove('opacity-0')
-        indicator.classList.add('opacity-100')
+        indicator.classList.add('text-white')
+        const icon = document.createElement('i')
+        icon.className =
+          this.tableSort.direction === 'asc'
+            ? 'fas fa-sort-up'
+            : 'fas fa-sort-down'
+        indicator.appendChild(icon)
+      } else {
+        const icon = document.createElement('i')
+        icon.className = 'fas fa-sort text-gray-400'
+        indicator.appendChild(icon)
       }
 
-      indicator.appendChild(icon)
       return indicator
     }
 
-    headerName.appendChild(_createSortIndicator('name'))
-    headerTracks.appendChild(_createSortIndicator('tracks.total'))
+    const nameIndicator = _createSortIndicator('name')
+    const tracksIndicator = _createSortIndicator('tracks.total')
+
+    headerName.appendChild(nameIndicator)
+    headerTracks.appendChild(tracksIndicator)
+
+    headerName.addEventListener('click', () => {
+      this._handleHeaderClick('name')
+    })
+
+    headerTracks.addEventListener('click', () => {
+      this._handleHeaderClick('tracks.total')
+    })
 
     header.appendChild(headerCover)
     header.appendChild(headerName)
@@ -174,6 +188,21 @@ export default class UiManager {
     playlistsContainer.appendChild(content)
   }
 
+  _handleHeaderClick(column) {
+    if (this.tableSort.column === column) {
+      this.tableSort.direction =
+        this.tableSort.direction === 'asc' ? 'desc' : 'asc'
+    } else {
+      this.tableSort.column = column
+      this.tableSort.direction = 'asc'
+    }
+
+    this.renderPlaylists(
+      this.currentOnPlaylistSelect,
+      window.appState?.selectedPlaylist
+    )
+  }
+
   toggleStartButton(isProcessing) {
     const btn = document.getElementById('start-button')
     if (!btn) {
@@ -188,29 +217,6 @@ export default class UiManager {
     if (container) {
       container.innerHTML = html
     }
-  }
-
-  _initTableSort() {
-    const headers = document.querySelectorAll(
-      '#playlists [role="columnheader"][data-sort]'
-    )
-    headers.forEach((header) => {
-      header.addEventListener('click', () => {
-        const column = header.dataset.sort
-        if (this.tableSort.column === column) {
-          this.tableSort.direction =
-            this.tableSort.direction === 'asc' ? 'desc' : 'asc'
-        } else {
-          this.tableSort.column = column
-          this.tableSort.direction = 'asc'
-        }
-
-        this.renderPlaylists(
-          this.currentOnPlaylistSelect,
-          window.appState?.selectedPlaylist
-        )
-      })
-    })
   }
 
   showLoader(show) {
@@ -280,10 +286,6 @@ export default class UiManager {
         document.getElementById('playlist-title').textContent =
           options.playlist.name
       }
-    }
-
-    if (view === 'playlist-selection') {
-      this._initTableSort()
     }
   }
 }
