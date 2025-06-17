@@ -138,8 +138,10 @@ export default class UiManager {
     }
 
     playlistsContainer.innerHTML = ''
+    playlistsContainer.className = 'playlist-container-minimal'
 
     const header = document.createElement('div')
+
     header.className = 'flex w-full sticky top-0'
 
     const headerCover = this._createHeaderCell('Cover', {
@@ -210,19 +212,17 @@ export default class UiManager {
 
     for (const playlist of sortedPlaylists) {
       const row = document.createElement('div')
-
-      row.className = `${this.designTokens.styling.rowBase} w-full`
+      row.className = `${this.designTokens.styling.rowBase} w-full playlist-row-minimal`
 
       if (selectedPlaylist && playlist.id === selectedPlaylist.id) {
-        row.classList.add(...this.designTokens.styling.selectedRow.split(' '))
+        row.classList.add('selected')
       }
 
       const coverImg = document.createElement('img')
       coverImg.src = playlist.images?.[0]?.url || 'placeholder.jpg'
       coverImg.alt = playlist.name
-
       coverImg.className =
-        'h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded object-cover bg-gray-200'
+        'playlist-cover-image h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 object-cover bg-gray-200'
 
       const coverCell = this._createRowCell(
         coverImg,
