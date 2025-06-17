@@ -41,6 +41,7 @@ export default class UiManager {
       this.playlists = response.items || []
     } catch (error) {
       this.showError('Failed to load playlists.')
+      this.navigateTo('login')
       console.error('API Error in loadPlaylists:', error)
       this.playlists = []
     } finally {
@@ -62,19 +63,19 @@ export default class UiManager {
     header.className = 'flex w-full bg-gray-900 text-white sticky top-0'
 
     const headerCover = document.createElement('div')
-    headerCover.className = 'flex items-center p-4 w-1/4 md:w-1/6'
+    headerCover.className = 'flex items-center p-2 md:p-4 w-1/4 md:w-1/6'
     headerCover.textContent = 'Cover'
     headerCover.setAttribute('role', 'columnheader')
 
     const headerName = document.createElement('div')
-    headerName.className = 'flex items-center p-4 flex-1 cursor-pointer'
+    headerName.className = 'flex items-center p-2 md:p-4 flex-1 cursor-pointer'
     headerName.textContent = 'Name'
     headerName.setAttribute('role', 'columnheader')
     headerName.setAttribute('data-sort', 'name')
 
     const headerTracks = document.createElement('div')
     headerTracks.className =
-      'flex items-center p-4 w-1/4 md:w-1/6 justify-end cursor-pointer'
+      'flex items-center p-2 md:p-4 w-1/6 justify-end cursor-pointer'
     headerTracks.textContent = 'Track Count'
     headerTracks.setAttribute('role', 'columnheader')
     headerTracks.setAttribute('data-sort', 'tracks.total')
@@ -156,16 +157,16 @@ export default class UiManager {
       }
 
       const coverCell = document.createElement('div')
-      coverCell.className = 'flex p-4 w-1/4 md:w-1/6'
+      coverCell.className = 'flex p-4 md:w-1/6'
       const coverImg = document.createElement('img')
       coverImg.src = playlist.images[0]?.url || 'placeholder.jpg'
       coverImg.alt = playlist.name
       coverImg.className =
-        'w-full h-auto rounded-md min-h-[60px] min-w-[60px] aspect-square object-cover bg-gray-200'
+        'h-auto min-w-[40px] w-[60px] md:w-[120px] rounded-md aspect-square object-cover bg-gray-200'
       coverCell.appendChild(coverImg)
 
       const nameCell = document.createElement('div')
-      nameCell.className = 'flex items-center p-4 flex-1 font-medium'
+      nameCell.className = 'flex items-center p-2 md:p-4 flex-1 font-medium'
       nameCell.textContent = playlist.name
 
       const trackCountCell = document.createElement('div')
