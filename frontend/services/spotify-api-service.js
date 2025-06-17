@@ -81,6 +81,11 @@ class SpotifyApiService {
   }
 
   async _apiRequest(urlOrEndpoint, method = 'GET', body = null) {
+    if (!this.authService.isAuthenticated()) {
+      this._redirectToLogin('No authentication token available')
+      return
+    }
+
     const url = urlOrEndpoint.startsWith('https://')
       ? urlOrEndpoint
       : `${this.apiBase}${urlOrEndpoint}`
@@ -114,6 +119,12 @@ class SpotifyApiService {
       return null
     }
     return response.json()
+  }
+
+  _redirectToLogin(reason) {
+    console.log(`🔄 Redirecting to login: ${reason}`)
+    this.authService.clearAuthData()
+    window.location.href = '/login'
   }
 }
 
