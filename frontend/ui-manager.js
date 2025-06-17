@@ -14,9 +14,9 @@ export default class UiManager {
         compact: 'p-2 md:p-3',
       },
       layout: {
-        coverCell: 'w-16 sm:w-20 md:w-24 flex-shrink-0',
+        coverCell: 'w-12 sm:w-20 md:w-24 flex-shrink-0',
         nameCell: 'flex-1 min-w-0',
-        countCell: 'w-16 sm:w-20 md:w-24 flex-shrink-0 justify-end',
+        countCell: 'w-12 sm:w-20 md:w-24 flex-shrink-0 justify-end',
       },
       styling: {
         headerBase: 'flex items-center bg-gray-900 text-white',
