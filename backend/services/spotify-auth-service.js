@@ -125,30 +125,27 @@ class SpotifyAuthService {
   }
 
   async _exchangeCodeForTokens(code) {
-    const requestBody = {
-      code,
-      redirect_uri: config.spotify.redirectUri,
-      grant_type: 'authorization_code',
-    }
-
     const authString = `${config.spotify.clientId}:${config.spotify.clientSecret}`
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
     this.logger.log('🔄 Exchanging code for tokens...')
-    this.logger.log('📝 Request body:', JSON.stringify(requestBody))
 
     try {
       const response = await this.httpClient.post(
         'https://accounts.spotify.com/api/token',
         {
-          body: stringify(requestBody),
+          form: {
+            code,
+            redirect_uri: config.spotify.redirectUri,
+            grant_type: 'authorization_code',
+          },
           headers: {
             Authorization: authHeader,
-            'Content-Type': 'application/x-www-form-urlencoded',
           },
           timeout: {
             request: 15000,
           },
+          responseType: 'json',
         }
       )
 
@@ -165,15 +162,7 @@ class SpotifyAuthService {
         throw new Error('Empty token response')
       }
 
-      let parsedBody = response.body
-      if (typeof response.body === 'string') {
-        try {
-          parsedBody = JSON.parse(response.body)
-        } catch (parseError) {
-          this.logger.error('Failed to parse token response:', parseError)
-          throw parseError
-        }
-      }
+      const parsedBody = response.body
 
       if (!parsedBody.access_token) {
         this.logger.error('No access token in response')
@@ -194,8 +183,9 @@ class SpotifyAuthService {
     )
 
     try {
-      const response = await this.httpClient
-        .get('https://api.spotify.com/v1/me', {
+      const response = await this.httpClient.get(
+        'https://api.spotify.com/v1/me',
+        {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -203,14 +193,15 @@ class SpotifyAuthService {
           timeout: {
             request: 10000,
           },
-        })
-        .json()
+          responseType: 'json',
+        }
+      )
 
-      if (!response?.id) {
+      if (!response.body?.id) {
         this.logger.error('No user ID in profile response')
         throw new Error('Invalid profile response')
       }
-      return response
+      return response.body
     } catch (profileError) {
       this.logger.error('User profile request failed:', profileError)
       throw profileError
@@ -222,27 +213,28 @@ class SpotifyAuthService {
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
     try {
-      const response = await this.httpClient
-        .post('https://accounts.spotify.com/api/token', {
+      const response = await this.httpClient.post(
+        'https://accounts.spotify.com/api/token',
+        {
           form: {
             grant_type: 'refresh_token',
             refresh_token: this.refreshToken,
           },
           headers: {
             Authorization: authHeader,
-            'Content-Type': 'application/x-www-form-urlencoded',
           },
           timeout: {
             request: 15000,
           },
-        })
-        .json()
+          responseType: 'json',
+        }
+      )
 
-      if (!response) {
-        this.logger.error('Token refresh request failed:', response)
+      if (!response.body) {
+        this.logger.error('Token refresh request failed:', response.body)
         throw new Error('Refresh request failed')
       }
-      return response
+      return response.body
     } catch (refreshError) {
       this.logger.error('Token refresh error:', refreshError)
       throw refreshError
