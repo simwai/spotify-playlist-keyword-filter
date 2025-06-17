@@ -160,7 +160,8 @@ export default class UiManager {
       const coverImg = document.createElement('img')
       coverImg.src = playlist.images[0]?.url || 'placeholder.jpg'
       coverImg.alt = playlist.name
-      coverImg.className = 'w-full h-auto rounded-md'
+      coverImg.className =
+        'w-full h-auto rounded-md min-h-[60px] min-w-[60px] aspect-square object-cover bg-gray-200'
       coverCell.appendChild(coverImg)
 
       const nameCell = document.createElement('div')
