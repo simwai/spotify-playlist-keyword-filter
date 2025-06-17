@@ -14,9 +14,9 @@ export default class UiManager {
         compact: 'p-2 md:p-3',
       },
       layout: {
-        coverCell: 'w-20 md:w-24',
-        nameCell: 'flex-1',
-        countCell: 'w-20 md:w-24',
+        coverCell: 'w-16 sm:w-20 md:w-24 flex-shrink-0',
+        nameCell: 'flex-1 min-w-0',
+        countCell: 'w-16 sm:w-20 md:w-24 flex-shrink-0 justify-end',
       },
       styling: {
         headerBase: 'flex items-center bg-gray-900 text-white',
@@ -222,7 +222,7 @@ export default class UiManager {
       coverImg.alt = playlist.name
 
       coverImg.className =
-        'h-12 w-12 md:h-16 md:w-16 rounded-md object-cover bg-gray-200'
+        'h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded object-cover bg-gray-200'
 
       const coverCell = this._createRowCell(
         coverImg,
