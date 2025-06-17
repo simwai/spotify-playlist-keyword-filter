@@ -5,12 +5,14 @@
       "type": "node",
       "request": "launch",
       "name": "Server",
-      "program": "${workspaceFolder}/src/index.js",
+      "program": "${workspaceFolder}/backend/index.js",
       "env": {
         "NODE_ENV": "development"
       },
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
       "outputCapture": "std"
     },
     {
@@ -29,7 +31,10 @@
   "compounds": [
     {
       "name": "Server/Client",
-      "configurations": ["Server", "Client"],
+      "configurations": [
+        "Server",
+        "Client"
+      ],
       "preLaunchTask": "npm: kill",
       "stopAll": true,
       "presentation": {

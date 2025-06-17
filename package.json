@@ -47,7 +47,7 @@
   },
   "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
   "scripts": {
-    "dev": "npm run kill && nodemon ./src/index.js --inspect --trace-warnings",
+    "dev": "npm run kill && nodemon ./backend/index.js --inspect --trace-warnings",
     "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
     "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
     "kill": "kill-port 8888",

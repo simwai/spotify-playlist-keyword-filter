@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'spotify-playlist-keyword-filter',
-      script: './src/index.js',
+      script: './backend/index.js',
       instances: 1,
       autorestart: true,
       watch: false,
