@@ -51,11 +51,65 @@ export default class UiManager {
   renderPlaylists(onPlaylistSelect, selectedPlaylist = null) {
     this.currentOnPlaylistSelect = onPlaylistSelect
 
-    const playlistsTable = document.querySelector('#playlists tbody')
-    if (!playlistsTable) {
+    const playlistsContainer = document.querySelector('#playlists')
+    if (!playlistsContainer) {
       return
     }
-    playlistsTable.innerHTML = ''
+
+    playlistsContainer.innerHTML = ''
+
+    const header = document.createElement('div')
+    header.className = 'flex w-full bg-gray-900 text-white sticky top-0'
+
+    const headerCover = document.createElement('div')
+    headerCover.className = 'flex items-center p-4 w-1/4 md:w-1/6'
+    headerCover.textContent = 'Cover'
+    headerCover.setAttribute('role', 'columnheader')
+
+    const headerName = document.createElement('div')
+    headerName.className = 'flex items-center p-4 flex-1'
+    headerName.textContent = 'Name'
+    headerName.setAttribute('role', 'columnheader')
+    headerName.setAttribute('data-sort', 'name')
+
+    const headerTracks = document.createElement('div')
+    headerTracks.className = 'flex items-center p-4 w-1/4 md:w-1/6 justify-end'
+    headerTracks.textContent = 'Track Count'
+    headerTracks.setAttribute('role', 'columnheader')
+    headerTracks.setAttribute('data-sort', 'tracks.total')
+    headerTracks.setAttribute('data-sort-method', 'number')
+
+    const _createSortIndicator = (column) => {
+      const indicator = document.createElement('span')
+      indicator.className =
+        'inline-flex items-center justify-center ml-2 w-4 h-4 opacity-0 transition-opacity duration-200'
+
+      const icon = document.createElement('i')
+      icon.className =
+        this.tableSort.direction === 'asc'
+          ? 'fas fa-sort-up'
+          : 'fas fa-sort-down'
+
+      if (this.tableSort.column === column) {
+        indicator.classList.remove('opacity-0')
+        indicator.classList.add('opacity-100')
+      }
+
+      indicator.appendChild(icon)
+      return indicator
+    }
+
+    headerName.appendChild(_createSortIndicator('name'))
+    headerTracks.appendChild(_createSortIndicator('tracks.total'))
+
+    header.appendChild(headerCover)
+    header.appendChild(headerName)
+    header.appendChild(headerTracks)
+
+    playlistsContainer.appendChild(header)
+
+    const content = document.createElement('div')
+    content.className = 'flex flex-col w-full'
 
     const sortedPlaylists = [...this.playlists].sort((a, b) => {
       if (!this.tableSort.column) {
@@ -79,27 +133,45 @@ export default class UiManager {
     })
 
     for (const playlist of sortedPlaylists) {
-      const row = document.createElement('tr')
-
-      row.innerHTML = `
-        <td><img src="${playlist.images[0]?.url || 'placeholder.jpg'}" alt="${playlist.name}" class="playlist-cover"></td>
-        <td>${playlist.name}</td>
-        <td>${playlist.tracks.total}</td>
-      `
+      const row = document.createElement('div')
+      row.className =
+        'flex w-full items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200 cursor-pointer'
 
       if (selectedPlaylist && playlist.id === selectedPlaylist.id) {
-        row.classList.add('selected')
+        row.classList.add('bg-green-50', 'border-l-3', 'border-l-green-500')
       }
+
+      const coverCell = document.createElement('div')
+      coverCell.className = 'flex p-4 w-1/4 md:w-1/6'
+      const coverImg = document.createElement('img')
+      coverImg.src = playlist.images[0]?.url || 'placeholder.jpg'
+      coverImg.alt = playlist.name
+      coverImg.className = 'w-full h-auto rounded-md'
+      coverCell.appendChild(coverImg)
+
+      const nameCell = document.createElement('div')
+      nameCell.className = 'flex items-center p-4 flex-1 font-medium'
+      nameCell.textContent = playlist.name
+
+      const trackCountCell = document.createElement('div')
+      trackCountCell.className =
+        'flex items-center justify-end p-4 w-1/4 md:w-1/6'
+      trackCountCell.textContent = playlist.tracks.total
+
+      row.appendChild(coverCell)
+      row.appendChild(nameCell)
+      row.appendChild(trackCountCell)
 
       row.addEventListener('click', () => {
         if (onPlaylistSelect) {
           onPlaylistSelect(playlist, row)
         }
       })
-      playlistsTable.appendChild(row)
+
+      content.appendChild(row)
     }
 
-    this._updateSortIndicators()
+    playlistsContainer.appendChild(content)
   }
 
   toggleStartButton(isProcessing) {
@@ -118,8 +190,10 @@ export default class UiManager {
     }
   }
 
-  initTableSort() {
-    const headers = document.querySelectorAll('#playlists thead th[data-sort]')
+  _initTableSort() {
+    const headers = document.querySelectorAll(
+      '#playlists [role="columnheader"][data-sort]'
+    )
     headers.forEach((header) => {
       header.addEventListener('click', () => {
         const column = header.dataset.sort
@@ -139,22 +213,25 @@ export default class UiManager {
     })
   }
 
-  filterModeultOutput(html) {
-    const container = document.getElementById('result-output')
-    if (container) {
-      container.innerHTML = html
-    }
-  }
-
-  showSuccess(message) {
-    console.log(message)
-    alert(message)
-  }
-
   showLoader(show) {
     const loader = document.getElementById('loader')
     if (loader) {
-      loader.classList.toggle('hidden', !show)
+      if (show) {
+        loader.classList.remove('hidden')
+        loader.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 300,
+          easing: 'ease-out',
+        })
+      } else {
+        const animation = loader.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 300,
+          easing: 'ease-in',
+        })
+
+        animation.onfinish = () => {
+          loader.classList.add('hidden')
+        }
+      }
     }
   }
 
@@ -206,19 +283,7 @@ export default class UiManager {
     }
 
     if (view === 'playlist-selection') {
-      this.initTableSort()
-    }
-  }
-
-  _updateSortIndicators() {
-    const headers = document.querySelectorAll('#playlists thead th')
-
-    for (const th of headers) {
-      th.classList.remove('sort-asc', 'sort-desc')
-
-      if (th.dataset.sort === this.tableSort.column) {
-        th.classList.add(`sort-${this.tableSort.direction}`)
-      }
+      this._initTableSort()
     }
   }
 }

@@ -75,12 +75,12 @@
     }
 
     /* Tablesort styles */
-    th[role='columnheader']:not(.no-sort) {
+    div[role='columnheader']:not(.no-sort) {
       cursor: pointer;
       position: relative;
     }
 
-    th[role='columnheader']:not(.no-sort):after {
+    div[role='columnheader']:not(.no-sort):after {
       content: '';
       position: absolute;
       right: 8px;
@@ -96,21 +96,21 @@
         opacity 0.2s;
     }
 
-    th[role='columnheader']:not(.no-sort):hover:after {
+    div[role='columnheader']:not(.no-sort):hover:after {
       visibility: visible;
       opacity: 0.4;
       border-top-color: var(--spotify-green);
       border-bottom: none;
     }
 
-    th[role='columnheader'].sort-asc:after {
+    div[role='columnheader'].sort-asc:after {
       border-bottom-color: var(--spotify-green);
       border-top: none;
       visibility: visible;
       opacity: 1;
     }
 
-    th[role='columnheader'].sort-desc:after {
+    div[role='columnheader'].sort-desc:after {
       border-top-color: var(--spotify-green);
       border-bottom: none;
       visibility: visible;
@@ -120,7 +120,6 @@
     /* Better table styling with high contrast header */
     #playlists {
       width: 100%;
-      border-collapse: collapse;
       border-radius: 0.5rem;
       overflow: hidden;
     }
@@ -153,7 +152,8 @@
     }
 
     #playlists img {
-      width: 140px;
+      width: 100%;
+      max-width: 140px;
       height: auto;
     }
 
@@ -215,8 +215,8 @@
     }
 
     .remove-tag:hover {
-      background-color: rgba(239, 68, 68, 0.2);
-      color: rgb(185, 28, 28);
+      background-color: rgba(0, 0, 0, 0.2);
+      color: rgba(0, 0, 0, 0.7);
     }
 
     /* Spotify-themed button */
@@ -282,6 +282,15 @@
     .spotify-input-button:hover {
       background-color: var(--spotify-green-hover);
     }
+
+    /* Animation delay utilities */
+    .animation-delay-150 {
+      animation-delay: 150ms;
+    }
+
+    .animation-delay-300 {
+      animation-delay: 300ms;
+    }
   </style>
 </head>
 
@@ -341,18 +350,9 @@
             Pick a playlist:
           </h1>
           <div class="rounded-lg overflow-hidden border border-gray-200">
-            <table id="playlists">
-              <thead>
-                <tr>
-                  <th role="columnheader">Cover</th>
-                  <th role="columnheader" data-sort="name">Name</th>
-                  <th role="columnheader" data-sort="tracks.total" data-sort-method="number">
-                    Track Count
-                  </th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <div id="playlists" class="flex flex-col w-full">
+              <!-- Content will be dynamically generated -->
+            </div>
           </div>
         </div>
 
@@ -403,6 +403,25 @@
         <!-- Results output -->
         <div id="result-output" class="flex flex-col items-center p-8"></div>
       </div>
+
+      <div id="loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow-lg">
+          <div class="relative w-20 h-20">
+            <!-- Spotify-inspired loader with spinning circles -->
+            <div class="absolute inset-0 border-4 border-t-green-500 border-r-green-300 border-b-green-100 border-l-transparent rounded-full animate-spin"></div>
+            <div class="absolute inset-2 border-4 border-t-transparent border-r-green-500 border-b-green-300 border-l-green-100 rounded-full animate-spin animation-delay-150"></div>
+            <div class="absolute inset-4 border-4 border-t-green-100 border-r-transparent border-b-green-500 border-l-green-300 rounded-full animate-spin animation-delay-300"></div>
+            <!-- Spotify logo in center -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" class="w-8 h-8 text-green-500">
+                <path fill="currentColor"
+                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.239.479.66.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+              </svg>
+            </div>
+          </div>
+          <p class="mt-4 text-gray-800 font-medium">Loading...</p>
+        </div>
+      </div>
     </div>
 
     <!-- Footer with improved vertical alignment -->
@@ -415,7 +434,7 @@
           </p>
         </div>
         <div class="flex items-center md:w-auto">
-          <p class="m-0">
+          <p class="c-0">
             <span class="text-gray-600">💻</span> Check out the code on
             <a href="https://github.com/simwai/spotify-playlist-keyword-filter/" class="text-blue-600 hover:underline px-1">GitHub</a>
             <span class="text-gray-600">📃</span>

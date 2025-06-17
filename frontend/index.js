@@ -71,11 +71,13 @@ function main() {
     appState.selectedPlaylist = playlist
 
     // Update the UI to show the selection
-    const allRows = document.querySelectorAll('#playlists tbody tr')
+    const allRows = document.querySelectorAll(
+      '#playlists > div:nth-child(2) > div'
+    )
     for (const row of allRows) {
-      row.classList.remove('selected')
+      row.classList.remove('bg-green-50', 'border-l-3', 'border-l-green-500')
     }
-    rowElement.classList.add('selected')
+    rowElement.classList.add('bg-green-50', 'border-l-3', 'border-l-green-500')
 
     // Navigate to the next step
     uiManager.navigateTo('tag-form', { playlist })
