@@ -7,6 +7,86 @@ export default class UiManager {
 
     this.spotifyApiService = spotifyApiService
     this.authService = authService
+
+    this.designTokens = {
+      spacing: {
+        cell: 'p-3 md:p-4',
+        compact: 'p-2 md:p-3',
+      },
+      layout: {
+        coverCell: 'w-20 md:w-24',
+        nameCell: 'flex-1',
+        countCell: 'w-20 md:w-24',
+      },
+      styling: {
+        headerBase: 'flex items-center bg-gray-900 text-white',
+        rowBase:
+          'flex items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200 cursor-pointer',
+        selectedRow: 'bg-green-50 border-l-4 border-l-green-500',
+      },
+    }
+  }
+
+  _createHeaderCell(content, options = {}) {
+    const {
+      layoutClass = '',
+      sortable = false,
+      sortColumn = null,
+      sortMethod = 'string',
+    } = options
+
+    const cell = document.createElement('div')
+    cell.className = `${this.designTokens.styling.headerBase} ${this.designTokens.spacing.cell} ${layoutClass}`
+
+    if (sortable) {
+      cell.classList.add('cursor-pointer')
+      cell.setAttribute('role', 'columnheader')
+      cell.setAttribute('data-sort', sortColumn)
+      if (sortMethod === 'number') {
+        cell.setAttribute('data-sort-method', 'number')
+      }
+    }
+
+    if (typeof content === 'string') {
+      cell.textContent = content
+    } else {
+      cell.appendChild(content)
+    }
+
+    return cell
+  }
+
+  _createRowCell(content, layoutClass = '') {
+    const cell = document.createElement('div')
+    cell.className = `flex items-center ${this.designTokens.spacing.cell} ${layoutClass}`
+
+    if (typeof content === 'string') {
+      cell.textContent = content
+    } else {
+      cell.appendChild(content)
+    }
+
+    return cell
+  }
+
+  _createSortIndicator(column) {
+    const indicator = document.createElement('span')
+    indicator.className = 'inline-flex items-center justify-center ml-2 w-4 h-4'
+
+    const icon = document.createElement('i')
+
+    if (this.tableSort.column === column) {
+      indicator.classList.add('text-white')
+      icon.className =
+        this.tableSort.direction === 'asc'
+          ? 'fas fa-sort-up'
+          : 'fas fa-sort-down'
+    } else {
+      icon.className = 'fas fa-sort text-gray-400'
+    }
+
+    indicator.appendChild(icon)
+    return indicator
   }
 
   renderKeywords(keywords, filterMode) {
@@ -60,54 +140,34 @@ export default class UiManager {
     playlistsContainer.innerHTML = ''
 
     const header = document.createElement('div')
-    header.className = 'flex w-full bg-gray-900 text-white sticky top-0'
+    header.className = 'flex w-full sticky top-0'
 
-    const headerCover = document.createElement('div')
-    headerCover.className = 'flex items-center p-2 md:p-4 w-1/4 md:w-1/6'
-    headerCover.textContent = 'Cover'
-    headerCover.setAttribute('role', 'columnheader')
+    const headerCover = this._createHeaderCell('Cover', {
+      layoutClass: this.designTokens.layout.coverCell,
+    })
 
-    const headerName = document.createElement('div')
-    headerName.className = 'flex items-center p-2 md:p-4 flex-1 cursor-pointer'
-    headerName.textContent = 'Name'
-    headerName.setAttribute('role', 'columnheader')
-    headerName.setAttribute('data-sort', 'name')
+    const headerNameContent = document.createElement('div')
+    headerNameContent.className = 'flex items-center'
+    headerNameContent.textContent = 'Name'
+    headerNameContent.appendChild(this._createSortIndicator('name'))
 
-    const headerTracks = document.createElement('div')
-    headerTracks.className =
-      'flex items-center p-2 md:p-4 w-1/6 justify-end cursor-pointer'
-    headerTracks.textContent = 'Track Count'
-    headerTracks.setAttribute('role', 'columnheader')
-    headerTracks.setAttribute('data-sort', 'tracks.total')
-    headerTracks.setAttribute('data-sort-method', 'number')
+    const headerName = this._createHeaderCell(headerNameContent, {
+      layoutClass: this.designTokens.layout.nameCell,
+      sortable: true,
+      sortColumn: 'name',
+    })
 
-    const _createSortIndicator = (column) => {
-      const indicator = document.createElement('span')
-      indicator.className =
-        'inline-flex items-center justify-center ml-2 w-4 h-4'
+    const headerTracksContent = document.createElement('div')
+    headerTracksContent.className = 'flex items-center justify-end'
+    headerTracksContent.textContent = 'Track Count'
+    headerTracksContent.appendChild(this._createSortIndicator('tracks.total'))
 
-      if (this.tableSort.column === column) {
-        indicator.classList.add('text-white')
-        const icon = document.createElement('i')
-        icon.className =
-          this.tableSort.direction === 'asc'
-            ? 'fas fa-sort-up'
-            : 'fas fa-sort-down'
-        indicator.appendChild(icon)
-      } else {
-        const icon = document.createElement('i')
-        icon.className = 'fas fa-sort text-gray-400'
-        indicator.appendChild(icon)
-      }
-
-      return indicator
-    }
-
-    const nameIndicator = _createSortIndicator('name')
-    const tracksIndicator = _createSortIndicator('tracks.total')
-
-    headerName.appendChild(nameIndicator)
-    headerTracks.appendChild(tracksIndicator)
+    const headerTracks = this._createHeaderCell(headerTracksContent, {
+      layoutClass: this.designTokens.layout.countCell,
+      sortable: true,
+      sortColumn: 'tracks.total',
+      sortMethod: 'number',
+    })
 
     headerName.addEventListener('click', () => {
       this._handleHeaderClick('name')
@@ -130,6 +190,7 @@ export default class UiManager {
       if (!this.tableSort.column) {
         return 0
       }
+
       const aValue =
         this.tableSort.column === 'tracks.total'
           ? a.tracks.total
@@ -149,30 +210,32 @@ export default class UiManager {
 
     for (const playlist of sortedPlaylists) {
       const row = document.createElement('div')
-      row.className =
-        'flex w-full items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200 cursor-pointer'
+
+      row.className = `${this.designTokens.styling.rowBase} w-full`
 
       if (selectedPlaylist && playlist.id === selectedPlaylist.id) {
-        row.classList.add('bg-green-50', 'border-l-3', 'border-l-green-500')
+        row.classList.add(...this.designTokens.styling.selectedRow.split(' '))
       }
 
-      const coverCell = document.createElement('div')
-      coverCell.className = 'flex p-4 md:w-1/6'
       const coverImg = document.createElement('img')
       coverImg.src = playlist.images[0]?.url || 'placeholder.jpg'
       coverImg.alt = playlist.name
+
       coverImg.className =
-        'h-auto min-w-[40px] w-[60px] md:w-[120px] rounded-md aspect-square object-cover bg-gray-200'
-      coverCell.appendChild(coverImg)
+        'h-12 w-12 md:h-16 md:w-16 rounded-md object-cover bg-gray-200'
 
-      const nameCell = document.createElement('div')
-      nameCell.className = 'flex items-center p-2 md:p-4 flex-1 font-medium'
-      nameCell.textContent = playlist.name
-
-      const trackCountCell = document.createElement('div')
-      trackCountCell.className =
-        'flex items-center justify-end p-4 w-1/4 md:w-1/6'
-      trackCountCell.textContent = playlist.tracks.total
+      const coverCell = this._createRowCell(
+        coverImg,
+        this.designTokens.layout.coverCell
+      )
+      const nameCell = this._createRowCell(
+        playlist.name,
+        `${this.designTokens.layout.nameCell} font-medium`
+      )
+      const trackCountCell = this._createRowCell(
+        playlist.tracks.total.toString(),
+        `${this.designTokens.layout.countCell} justify-end`
+      )
 
       row.appendChild(coverCell)
       row.appendChild(nameCell)
@@ -252,6 +315,7 @@ export default class UiManager {
     if (view === 'login') {
       document.getElementById('login')?.classList.remove('hidden')
       document.getElementById('logged-in')?.classList.add('hidden')
+
       document
         .getElementById('back-to-playlists-button')
         ?.classList.add('hidden')
@@ -271,6 +335,7 @@ export default class UiManager {
 
     if (view === 'playlist-selection') {
       document.getElementById('playlist-form')?.classList.remove('hidden')
+
       document
         .getElementById('back-to-playlists-button')
         ?.classList.add('hidden')
@@ -280,6 +345,7 @@ export default class UiManager {
 
     if (view === 'tag-form') {
       document.getElementById('tag-form')?.classList.remove('hidden')
+
       document
         .getElementById('back-to-playlists-button')
         ?.classList.remove('hidden')
