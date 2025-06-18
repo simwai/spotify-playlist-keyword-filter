@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('ultimate-express')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const config = require('../config/index.js')

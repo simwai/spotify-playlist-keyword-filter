@@ -11,3 +11,5 @@ function generateRandomString(length) {
 }
 
 module.exports = { generateRandomString }
+module.exports.default = generateRandomString
+module.exports.generateRandomString = generateRandomString

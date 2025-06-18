@@ -1,6 +1,3 @@
-// Acts as the central "controller". It initializes everything,
-// owns the application state, and defines all actions that can modify that state.
-
 import AuthService from './services/auth-service.js'
 import SpotifyApiService from './services/spotify-api-service.js'
 import LyricsService from './services/lyrics-service.js'
@@ -9,7 +6,6 @@ import SpotifyPlaylistFilter from './spotify-playlist-filter.js'
 import { createObservable } from './create-observable.js'
 
 function main() {
-  // --- 1. Constants & Services (No local dependencies) ---
   const filterModeEnum = { EXCLUDE: 'exclude', INCLUDE: 'include' }
   Object.freeze(filterModeEnum)
 
@@ -18,7 +14,6 @@ function main() {
   const spotifyApiService = new SpotifyApiService(authService)
   const uiManager = new UiManager(spotifyApiService, authService)
 
-  // --- 2. Rendering Function ---
   const renderApp = () => {
     const state = window.appState
     if (!state) {
@@ -33,7 +28,6 @@ function main() {
     }
   }
 
-  // --- 3. Central State ---
   const initialAppState = {
     keywords: [],
     filterMode: filterModeEnum.EXCLUDE,
@@ -43,14 +37,12 @@ function main() {
   const appState = createObservable(initialAppState, () => renderApp())
   window.appState = appState
 
-  // --- 4. State-Dependent Services ---
   const spotifyPlaylistFilter = new SpotifyPlaylistFilter(
     spotifyApiService,
     lyricsService,
     uiManager
   )
 
-  // --- 5. Actions (The only functions that should modify appState) ---
   const addKeyword = () => {
     const tagInput = document.getElementById('tag-input')
     const newKeyword = tagInput.value.trim().toLowerCase()
@@ -67,10 +59,8 @@ function main() {
   }
 
   const selectPlaylist = (playlist, rowElement) => {
-    // Update the central state
     appState.selectedPlaylist = playlist
 
-    // Update the UI to show the selection
     const allRows = document.querySelectorAll(
       '#playlists > div:nth-child(2) > div'
     )
@@ -79,15 +69,98 @@ function main() {
     }
     rowElement.classList.add('bg-green-50', 'border-l-3', 'border-l-green-500')
 
-    // Navigate to the next step
     uiManager.navigateTo('tag-form', { playlist })
   }
 
-  // --- 6. Event Listener Registration ---
+  const clearInputErrors = () => {
+    const clientIdInput = document.getElementById('spotify-client-id')
+    const clientSecretInput = document.getElementById('spotify-client-secret')
+
+    clientIdInput?.classList.remove(
+      'border-red-500',
+      'focus:ring-red-500',
+      'focus:border-red-500'
+    )
+    clientSecretInput?.classList.remove(
+      'border-red-500',
+      'focus:ring-red-500',
+      'focus:border-red-500'
+    )
+  }
+
+  const addInputError = (inputElement) => {
+    inputElement?.classList.add(
+      'border-red-500',
+      'focus:ring-red-500',
+      'focus:border-red-500'
+    )
+  }
+
+  const handleLogin = () => {
+    const clientIdInput = document.getElementById('spotify-client-id')
+    const clientSecretInput = document.getElementById('spotify-client-secret')
+    const clientId = clientIdInput.value.trim()
+    const clientSecret = clientSecretInput.value.trim()
+
+    clearInputErrors()
+
+    const hasErrors = false
+
+    if (!clientId) {
+      addInputError(clientIdInput)
+      clientIdInput.focus()
+      uiManager.showError('Please enter your Spotify Client ID')
+      return
+    }
+
+    if (!/^[a-f0-9]{32}$/i.test(clientId)) {
+      addInputError(clientIdInput)
+      clientIdInput.focus()
+
+      uiManager.showError(
+        'Invalid Client ID format. Should be 32 characters (letters and numbers)'
+      )
+      return
+    }
+    if (!clientSecret) {
+      addInputError(clientSecretInput)
+      if (!hasErrors) {
+        clientSecretInput.focus()
+      }
+      uiManager.showError('Please enter your Spotify Client Secret')
+      return
+    }
+
+    if (!/^[a-f0-9]{32}$/i.test(clientSecret)) {
+      addInputError(clientSecretInput)
+      if (!hasErrors) {
+        clientSecretInput.focus()
+      }
+      uiManager.showError(
+        'Invalid Client Secret format. Should be 32 characters (letters and numbers)'
+      )
+      return
+    }
+
+    try {
+      authService.setCredentials(clientId, clientSecret)
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+      })
+
+      window.location.href = `/login?${params.toString()}`
+    } catch (error) {
+      console.error('❌ Credential save failed:', error)
+      uiManager.showError(`Failed to save credentials: ${error.message}`)
+    }
+  }
+
   const registerEventListeners = () => {
-    document.getElementById('login-button')?.addEventListener('click', () => {
-      window.location.href = '/login'
-    })
+    document
+      .getElementById('login-button')
+      ?.addEventListener('click', handleLogin)
 
     document.getElementById('add-button')?.addEventListener('click', addKeyword)
 
@@ -98,7 +171,6 @@ function main() {
       }
     })
 
-    // Event Delegation for removing keywords from the dynamic list
     document.getElementById('tags')?.addEventListener('click', (event) => {
       const removeButton = event.target.closest('.remove-tag')
       if (removeButton) {
@@ -125,7 +197,21 @@ function main() {
       })
   }
 
-  // --- 7. App Initialization ---
+  const populateCredentialInputs = () => {
+    const clientIdInput = document.getElementById('spotify-client-id')
+    const clientSecretInput = document.getElementById('spotify-client-secret')
+    const storedClientId = authService.getClientId()
+    const storedClientSecret = authService.getClientSecret()
+
+    if (clientIdInput && storedClientId) {
+      clientIdInput.value = storedClientId
+    }
+
+    if (clientSecretInput && storedClientSecret) {
+      clientSecretInput.value = storedClientSecret
+    }
+  }
+
   const initializeApp = async () => {
     registerEventListeners()
     authService.parseUrlParams()
@@ -140,6 +226,7 @@ function main() {
       uiManager.renderPlaylists(selectPlaylist, appState.selectedPlaylist)
     } else {
       uiManager.navigateTo('login')
+      populateCredentialInputs()
     }
 
     renderApp(appState)

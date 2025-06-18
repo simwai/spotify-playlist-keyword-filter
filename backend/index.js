@@ -1,5 +1,5 @@
 // TODO Add backend tests
-const express = require('express')
+const express = require('ultimate-express')
 
 const { setupMiddleware } = require('./middleware/index.js')
 const { setupRoutes } = require('./routes/index.js')

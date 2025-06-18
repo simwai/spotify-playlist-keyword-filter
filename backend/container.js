@@ -33,14 +33,29 @@ async function createContainer() {
   )
 
   const spotifyAuthService = new SpotifyAuthService(logger, config, httpClient)
-  const spotifyApiClient = new SpotifyApiClient(httpClient, config)
+
+  const spotifyClient = (
+    accessToken = null,
+    refreshToken = null,
+    clientId = null,
+    clientSecret = null
+  ) => {
+    return new SpotifyApiClient(
+      httpClient,
+      config,
+      accessToken,
+      refreshToken,
+      clientId,
+      clientSecret
+    )
+  }
 
   const container = {
     lyricsService,
     logger,
     config,
     spotifyAuthService,
-    spotifyApiClient,
+    spotifyClient,
     httpClient,
   }
 

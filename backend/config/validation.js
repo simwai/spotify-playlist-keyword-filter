@@ -44,4 +44,6 @@ function validateConfig() {
   }
 }
 
-module.exports = { validateConfig }
+module.exports = validateConfig
+module.exports.default = validateConfig
+module.exports.validateConfig = validateConfig

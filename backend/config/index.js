@@ -11,8 +11,8 @@ const config = {
     frontendUrl: process.env.FRONTEND_URL,
   },
   spotify: {
-    clientId: process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+    // clientId: process.env.SPOTIFY_CLIENT_ID,
+    // clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
     redirectUri: process.env.SPOTIFY_REDIRECT_URI,
   },
   genius: {
@@ -29,3 +29,5 @@ const config = {
 }
 
 module.exports = config
+module.exports.default = config
+module.exports.config = config

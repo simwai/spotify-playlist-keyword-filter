@@ -22,11 +22,21 @@ class SpotifyAuthService {
     this.httpClient = httpClient
 
     this.stateKey = 'spotify_auth_state'
+    this.clientIdKey = 'spotify_client_id'
+    this.clientSecretKey = 'spotify_client_secret'
     this.refreshToken = null
     this.uid = null
   }
 
-  async getAuthUrl(res) {
+  async getAuthUrl(res, clientId, clientSecret) {
+    if (!clientId || typeof clientId !== 'string') {
+      throw new Error('Valid client ID is required for authentication')
+    }
+
+    if (!clientSecret || typeof clientSecret !== 'string') {
+      throw new Error('Valid client secret is required for authentication')
+    }
+
     const state = generateRandomString(16)
     this.logger.log('🔐 Generated state:', state)
 
@@ -39,12 +49,16 @@ class SpotifyAuthService {
     }
 
     res.cookie(this.stateKey, state, cookieOptions)
+    res.cookie(this.clientIdKey, clientId, cookieOptions)
+    res.cookie(this.clientSecretKey, clientSecret, cookieOptions)
 
     this.logger.log(
-      '🍪 Set cookie with key:',
-      this.stateKey,
-      'and value:',
-      state
+      '🍪 Set cookies - state:',
+      state,
+      'clientId:',
+      clientId.substring(0, 8) + '...',
+      'clientSecret:',
+      clientSecret.substring(0, 8) + '...'
     )
 
     const scope =
@@ -53,23 +67,35 @@ class SpotifyAuthService {
 
     const authUrl = `https://accounts.spotify.com/authorize?${stringify({
       response_type: 'code',
-      client_id: config.spotify.clientId,
+      client_id: clientId,
       scope,
       redirect_uri: redirectUri,
       state,
     })}`
-    this.logger.log('Auth URL generated successfully')
+    this.logger.log(
+      'Auth URL generated successfully with client ID:',
+      clientId.substring(0, 8) + '...'
+    )
     return authUrl
   }
 
   async handleCallback(req, res) {
     const { code, state, error } = req.query
     const storedState = req.cookies?.[this.stateKey]
+    const storedClientId = req.cookies?.[this.clientIdKey]
+    const storedClientSecret = req.cookies?.[this.clientSecretKey]
 
     this.logger.log('🔍 Callback debugging:')
     this.logger.log('  - Received state:', state)
     this.logger.log('  - Stored state:', storedState)
-    this.logger.log('  - State key:', this.stateKey)
+    this.logger.log(
+      '  - Stored client ID:',
+      storedClientId?.substring(0, 8) + '...'
+    )
+    this.logger.log(
+      '  - Stored client secret:',
+      storedClientSecret?.substring(0, 8) + '...'
+    )
 
     if (error) {
       this.logger.error('Spotify authorization error:', error)
@@ -82,15 +108,31 @@ class SpotifyAuthService {
       throw new Error('Security validation failed')
     }
 
+    if (!storedClientId) {
+      this.logger.error('No client ID found in callback')
+      throw new Error('Client ID missing from session')
+    }
+
+    if (!storedClientSecret) {
+      this.logger.error('No client secret found in callback')
+      throw new Error('Client secret missing from session')
+    }
+
     if (!code) {
       this.logger.error('No authorization code received')
       throw new Error('Authorization code missing')
     }
 
     res.clearCookie(this.stateKey)
+    res.clearCookie(this.clientIdKey)
+    res.clearCookie(this.clientSecretKey)
 
     try {
-      const tokens = await this._exchangeCodeForTokens(code)
+      const tokens = await this._exchangeCodeForTokens(
+        code,
+        storedClientId,
+        storedClientSecret
+      )
       const userProfile = await this._fetchUserProfile(tokens.access_token)
 
       this.uid = userProfile.id
@@ -105,14 +147,24 @@ class SpotifyAuthService {
     }
   }
 
-  async refreshAccessToken() {
+  async refreshAccessToken(clientId, clientSecret) {
+    if (!clientId) {
+      this.logger.error('No client ID provided for token refresh')
+      throw new Error('Client ID required for token refresh')
+    }
+
+    if (!clientSecret) {
+      this.logger.error('No client secret provided for token refresh')
+      throw new Error('Client secret required for token refresh')
+    }
+
     if (!this.refreshToken) {
       this.logger.error('No refresh token available')
       throw new Error('No refresh token available')
     }
 
     try {
-      const tokens = await this._refreshAccessToken()
+      const tokens = await this._refreshAccessToken(clientId, clientSecret)
       this.logger.log('Token refreshed successfully')
       return this._buildRedirectUrl({
         access_token: tokens.access_token,
@@ -124,11 +176,14 @@ class SpotifyAuthService {
     }
   }
 
-  async _exchangeCodeForTokens(code) {
-    const authString = `${config.spotify.clientId}:${config.spotify.clientSecret}`
+  async _exchangeCodeForTokens(code, clientId, clientSecret) {
+    const authString = `${clientId}:${clientSecret}`
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
-    this.logger.log('🔄 Exchanging code for tokens...')
+    this.logger.log(
+      '🔄 Exchanging code for tokens with credentials:',
+      clientId.substring(0, 8) + '...'
+    )
 
     try {
       const response = await this.httpClient.post(
@@ -150,10 +205,12 @@ class SpotifyAuthService {
       )
 
       this.logger.log('📊 Token response status:', response.statusCode)
-      this.logger.log('🎫 Token response body:', response.body)
 
       if (response.statusCode !== 200) {
-        this.logger.error('Spotify token request failed:', response.body)
+        this.logger.error(
+          'Spotify token request failed:',
+          JSON.stringify(response.body)
+        )
         throw new Error('Token exchange failed')
       }
 
@@ -208,8 +265,8 @@ class SpotifyAuthService {
     }
   }
 
-  async _refreshAccessToken() {
-    const authString = `${config.spotify.clientId}:${config.spotify.clientSecret}`
+  async _refreshAccessToken(clientId, clientSecret) {
+    const authString = `${clientId}:${clientSecret}`
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
     try {

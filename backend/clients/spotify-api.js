@@ -1,5 +1,12 @@
 class SpotifyApiClient {
-  constructor(httpClient, config, accessToken = null, refreshToken = null) {
+  constructor(
+    httpClient,
+    config,
+    accessToken = null,
+    refreshToken = null,
+    clientId = null,
+    clientSecret = null
+  ) {
     if (!httpClient) {
       throw new Error('No http client provided to SpotifyApiClient')
     }
@@ -13,7 +20,14 @@ class SpotifyApiClient {
 
     this.accessToken = accessToken
     this.refreshToken = refreshToken
+    this.clientId = clientId
+    this.clientSecret = clientSecret
     this.baseUrl = 'https://api.spotify.com/v1'
+  }
+
+  setCredentials(clientId, clientSecret) {
+    this.clientId = clientId
+    this.clientSecret = clientSecret
   }
 
   async getUserProfile() {
@@ -136,8 +150,16 @@ class SpotifyApiClient {
       return false
     }
 
+    const clientId = this.clientId
+    const clientSecret = this.clientSecret
+
+    if (!clientId || !clientSecret) {
+      console.error('No client credentials available for token refresh')
+      return false
+    }
+
     try {
-      const authString = `${this.config.spotify.clientId}:${this.config.spotify.clientSecret}`
+      const authString = `${clientId}:${clientSecret}`
       const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
       // Use the httpClient instead of got directly

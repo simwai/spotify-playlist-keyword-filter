@@ -7,10 +7,7 @@ function errorHandler(error, req, res, next) {
 
   res.status(500).json({
     error: 'Internal server error',
-    message:
-      process.env.NODE_ENV === 'development'
-        ? error.message
-        : 'Something went wrong',
+    message: error.message,
   })
 }
 

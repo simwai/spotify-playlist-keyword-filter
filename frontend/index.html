@@ -309,13 +309,58 @@
         <p class="text-gray-600 text-center">
           Filter your Spotify playlists now!
         </p>
-        <a href="/login" id="login-button" class="spotify-button">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 mr-2">
-            <path fill="currentColor"
-              d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.239.479.66.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-          </svg>
-          Log in with Spotify
-        </a>
+
+        <!-- Tutorial Section -->
+        <div class="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+          <h3 class="font-semibold text-purple-800 mb-2 flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            Quick Setup Tutorial
+          </h3>
+          <div class="text-purple-700 space-y-2">
+            <p><strong>1.</strong> Create a Spotify app at <a href="https://developer.spotify.com/dashboard" target="_blank" class="underline hover:text-purple-900">developer.spotify.com/dashboard</a>
+            </p>
+            <p><strong>2.</strong> Add one of these callback URLs to your app settings:</p>
+            <div class="bg-white rounded border border-blue-200 p-2 mt-1 font-mono text-xs">
+              <div class="text-green-600">✓ https://filteryourplaylist.wobbit.at/callback</div>
+              <div class="text-gray-600">✓ http://localhost:8888/callback</div>
+              <div class="text-gray-600">✓ http://127.0.0.1:8888/callback</div>
+            </div>
+            <p><strong>3.</strong> Copy your Client ID and Client Secret below</p>
+            <p class="text-xs text-purple-600">💡 Your credentials stay in your browser - never sent to our servers!</p>
+          </div>
+        </div>
+
+        <div class="w-full flex flex-col gap-4">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+              <label for="spotify-client-id" class="text-sm font-medium text-gray-700">
+                Your Spotify Client ID
+              </label>
+              <input type="text" id="spotify-client-id" placeholder="Enter your Spotify app Client ID..."
+                class="spotify-input border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="spotify-client-secret" class="text-sm font-medium text-gray-700">
+                Your Spotify Client Secret
+              </label>
+              <input type="password" id="spotify-client-secret" placeholder="Enter your Spotify app Client Secret..."
+                class="spotify-input border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" />
+            </div>
+
+            <p class="text-xs text-gray-500">
+              Get both credentials from your <a href="https://developer.spotify.com/dashboard" target="_blank" class="text-green-600 hover:underline">Spotify Developer Dashboard</a>
+            </p>
+          </div>
+
+          <button type="button" id="login-button" class="spotify-button">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 mr-2">
+              <path fill="currentColor"
+                d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.239.479.66.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+            </svg>
+            Log in with Spotify
+          </button>
+        </div>
       </div>
 
       <!-- Main content -->
@@ -391,7 +436,7 @@
         <div class="flex items-center md:w-auto">
           <p class="c-0">
             <span class="text-gray-600">💻</span> Check out the code on
-            <a href="https://github.com/simwai/spotify-playlist-keyword-filter/" class="text-blue-600 hover:underline px-1">GitHub</a>
+            <a href="https://github.com/simwai/spotify-playlist-keyword-filter/" class="text-purple-600 hover:underline px-1">GitHub</a>
             <span class="text-gray-600">📃</span>
           </p>
         </div>

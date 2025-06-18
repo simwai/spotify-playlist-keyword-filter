@@ -1,10 +1,12 @@
 // jest.config.js
 module.exports = {
-  testEnvironment: 'jsdom', // for DOM testing
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testMatch: ['<rootDir>/tests/**/*.test.js'],
   collectCoverageFrom: [
+    'backend/**/*.js',
     'frontend/**/*.js',
-    '!frontend/index.js', // exclude while refactoring
+    '!**/node_modules/**',
+    '!**/tests/**',
   ],
-  testMatch: ['**/tests/**/*.test.js', '**/__tests__/**/*.test.js'],
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
 }

@@ -1,5 +1,5 @@
 const path = require('path')
-const express = require('express')
+const express = require('ultimate-express')
 
 const authRoutes = require('./auth.js')
 const lyricsRoutes = require('./lyrics.js')
@@ -24,6 +24,4 @@ function setupRoutes(app, container) {
   })
 }
 
-module.exports = setupRoutes
-module.exports.default = setupRoutes
 module.exports.setupRoutes = setupRoutes

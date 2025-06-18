@@ -308,6 +308,50 @@ export default class UiManager {
 
   showError(message) {
     console.error(message)
+
+    const existingError = document.querySelector('.error-message')
+    if (existingError) {
+      existingError.remove()
+    }
+
+    const errorDiv = document.createElement('div')
+    errorDiv.className =
+      'error-message fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
+    errorDiv.textContent = message
+
+    document.body.appendChild(errorDiv)
+
+    errorDiv.animate(
+      [
+        { opacity: 0, transform: 'translate(-50%, -20px)' },
+        { opacity: 1, transform: 'translate(-50%, 0)' },
+      ],
+      {
+        duration: 300,
+        easing: 'ease-out',
+      }
+    )
+
+    setTimeout(() => {
+      if (errorDiv.parentElement) {
+        const animation = errorDiv.animate(
+          [
+            { opacity: 1, transform: 'translate(-50%, 0)' },
+            { opacity: 0, transform: 'translate(-50%, -20px)' },
+          ],
+          {
+            duration: 300,
+            easing: 'ease-in',
+          }
+        )
+
+        animation.onfinish = () => {
+          if (errorDiv.parentElement) {
+            errorDiv.remove()
+          }
+        }
+      }
+    }, 4000)
   }
 
   navigateTo(view, options = {}) {

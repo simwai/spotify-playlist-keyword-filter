@@ -70,7 +70,7 @@ class SpotifyApiService {
         nextUrl = response.next
       } catch (error) {
         console.error('❌ Error fetching a batch of playlist tracks:', error)
-        throw new Error(`Failed to fetch tracks: ${error.message}`)
+        throw error
       }
     }
   }
@@ -131,6 +131,12 @@ class SpotifyApiService {
       return false
     }
 
+    if (!this.authService.hasCredentials()) {
+      console.log('🚫 No stored credentials available for token refresh')
+      this._redirectToLogin('Please log in again with your Spotify credentials')
+      return false
+    }
+
     this.isRefreshing = true
     console.log('🔄 Attempting token refresh...')
 
@@ -145,7 +151,13 @@ class SpotifyApiService {
 
   async _performTokenRefresh() {
     try {
-      const refreshUrl = `/refresh_token`
+      const params = new URLSearchParams({
+        client_id: this.authService.getClientId(),
+        client_secret: this.authService.getClientSecret(),
+      })
+
+      const refreshUrl = `/refresh_token?${params.toString()}`
+
       const response = await fetch(refreshUrl, {
         method: 'GET',
         credentials: 'include',
