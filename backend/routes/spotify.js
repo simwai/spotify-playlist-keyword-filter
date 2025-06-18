@@ -1,4 +1,4 @@
-const express = require('ultimate-express')
+const express = require('express')
 
 class SpotifyRoutes {
   constructor(container) {

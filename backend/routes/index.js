@@ -1,5 +1,5 @@
 const path = require('path')
-const express = require('ultimate-express')
+const express = require('express')
 
 const authRoutes = require('./auth.js')
 const lyricsRoutes = require('./lyrics.js')
