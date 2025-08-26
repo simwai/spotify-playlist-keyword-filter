@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  spotify-app:
+    build:
+      context: .
+      dockerfile: Dockerfile  
+    container_name: spotify-genius-app
+    ports:
+      - "8888:8888"
+    env_file:
+      - .env
+    volumes:
+      - .:/app          
+      - /app/node_modules  
+    command: npm run dev
