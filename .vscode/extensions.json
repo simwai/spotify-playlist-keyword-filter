@@ -6,7 +6,6 @@
     "kisstkondoros.vscode-codemetrics",
     "mikestead.dotenv",
     "davidanson.vscode-markdownlint",
-    "christian-kohler.path-intellisense",
     "antfu.unocss",
     "stylelint.vscode-stylelint"
   ]
