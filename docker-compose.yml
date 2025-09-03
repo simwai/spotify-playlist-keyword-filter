@@ -1,9 +1,9 @@
 services:
-  spotify-app:
+  spotify-playlist-keyword-filter:
     build:
       context: .
       dockerfile: Dockerfile  
-    container_name: spotify-genius-app
+    container_name:  spotify-playlist-keyword-filter 
     ports:
       - "8888:8888"
     env_file:
