@@ -1,9 +1,9 @@
 # Spotify Playlist Keyword Filter
 
 A lot of unproductive words are in most of the current songs. If you want to have a clean playlist with none of such words, start using Spotify Playlist Keyword Filter. Maybe you have an addiction or little respect for women then listening to selected music can be benefiting.
-
-## Features
-
+                   
+## Features     
+          
 - Connect to your Spotify account
 - Fetch playlists and track information
 - Search and retrieve song lyrics from Genius API
@@ -11,8 +11,8 @@ A lot of unproductive words are in most of the current songs. If you want to hav
 - Clean playlist management
 - Persistent lyrics caching with SQLite database
 - Modular architecture with proper separation of concerns
-
-## Prerequisites
+       
+## Prerequisites     
 
 - Node.js (Download from [nodejs.org](https://nodejs.org/download/))
 - Spotify Developer Account
@@ -34,7 +34,7 @@ npm install
 Copy the example environment file and configure your credentials:
 
 ```bash
-cp .env.example .env
+cp .env.example .env 
 ```
 
 Update the `.env` file with your actual credentials.

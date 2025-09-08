@@ -2,10 +2,7 @@ const express = require('express')
 
 const { setupMiddleware } = require('./middleware/index.js')
 const { setupRoutes } = require('./routes/index.js')
-const {
-  errorHandler,
-  notFoundHandler,
-} = require('./middleware/error-handler.js')
+const { errorHandler, notFoundHandler } = require('./middleware/error-handler.js')
 const config = require('./config/index.js')
 
 // This import instantiates our container that does some main orchestration
@@ -25,7 +22,5 @@ app.use(notFoundHandler)
 app.use(errorHandler)
 
 app.listen(config.app.port, () => {
-  container.logger.log(
-    `🚀 Server running on ${_removePortInUrl(config.app.frontendUrl)}:${config.app.port}`
-  )
+  container.logger.log(`🚀 Server running on ${_removePortInUrl(config.app.frontendUrl)}:${config.app.port}`)
 })

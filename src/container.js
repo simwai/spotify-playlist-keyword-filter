@@ -1,5 +1,5 @@
 const he = require('he')
-const { ConsoleLogger } = require('@simwai/utils')
+const { ConsoleLogger } = require('./utils/console-logger.js')
 
 const { LyricsService } = require('./services/lyrics-service.js')
 const { GeniusApiClient } = require('./clients/genius-api.js')
@@ -14,13 +14,7 @@ const logger = new ConsoleLogger({ isTimeEnabled: true })
 const geniusClient = new GeniusApiClient(logger, httpClient, config)
 const lyricsExtractor = new LyricsExtractor(he, logger)
 const LyricsCache = require('./cache/lyrics-cache-model.js')
-const lyricsService = new LyricsService(
-  geniusClient,
-  lyricsExtractor,
-  httpClient,
-  logger,
-  LyricsCache
-)
+const lyricsService = new LyricsService(geniusClient, lyricsExtractor, httpClient, logger, LyricsCache)
 const spotifyAuthService = new SpotifyAuthService(logger, config, httpClient)
 const spotifyApiClient = new SpotifyApiClient(httpClient, config)
 
