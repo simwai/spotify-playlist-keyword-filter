@@ -3,7 +3,7 @@ const Validator = require('fastest-validator')
 const v = new Validator()
 
 const schema = {
-  PORT: { type: 'number', integer: true, min: 1, max: 65535, optional: false },
+  PORT: { type: 'number', integer: true, min: 1, max: 65535, optional: true },
   FRONTEND_URL: { type: 'string', empty: false, optional: false },
   GENIUS_APP_URL: { type: 'string', empty: false, optional: false },
   GENIUS_CLIENT_ID: { type: 'string', empty: false, optional: false },
@@ -22,7 +22,7 @@ const schema = {
 
 function validateConfig() {
   const env = {
-    PORT: Number(process.env.PORT),
+    PORT: Number(process.env.PORT || 3000),
     FRONTEND_URL: process.env.FRONTEND_URL,
     GENIUS_APP_URL: process.env.GENIUS_APP_URL,
     GENIUS_CLIENT_ID: process.env.GENIUS_CLIENT_ID,
