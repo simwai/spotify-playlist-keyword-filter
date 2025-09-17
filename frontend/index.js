@@ -9,9 +9,7 @@ class SpotifyPlaylistFilter {
     }
 
     if (!spotifyApiService) {
-      throw new Error(
-        'No Spotify API service provided to SpotifyPlaylistFilter!'
-      )
+      throw new Error('No Spotify API service provided to SpotifyPlaylistFilter!')
     }
 
     if (!uiManager) {
@@ -55,9 +53,7 @@ class SpotifyPlaylistFilter {
     })
     startButton?.addEventListener('click', () => this.startFiltering())
 
-    const filterModeInputs = document.querySelectorAll(
-      'input[name="filter-mode"]'
-    )
+    const filterModeInputs = document.querySelectorAll('input[name="filter-mode"]')
     for (const input of filterModeInputs) {
       input.addEventListener('change', (event) => {
         this.filterMode = event.target.value?.toLowerCase()
@@ -78,10 +74,7 @@ class SpotifyPlaylistFilter {
     }
 
     if (this.authService.userId) {
-      await this.uiManager.loadPlaylists(
-        this.spotifyApiService,
-        this.authService
-      )
+      await this.uiManager.loadPlaylists(this.spotifyApiService, this.authService)
       this._renderKeywordsWithCurrentMode()
       return
     }
@@ -96,17 +89,12 @@ class SpotifyPlaylistFilter {
         console.warn('Failed to store uid from /me in sessionStorage', e)
       }
 
-      await this.uiManager.loadPlaylists(
-        this.spotifyApiService,
-        this.authService
-      )
+      await this.uiManager.loadPlaylists(this.spotifyApiService, this.authService)
       this._renderKeywordsWithCurrentMode()
     } catch (error) {
       this.authService.clearAuthData()
       this.uiManager.navigateTo('login')
-      this.uiManager.showError(
-        'Session expired or token invalid. Please log in again.'
-      )
+      this.uiManager.showError('Session expired or token invalid. Please log in again.')
     }
   }
 
@@ -157,10 +145,7 @@ class SpotifyPlaylistFilter {
             `<span>🔄 Processing batch ${batchNumber} of tracks for lyrics & filtering... (Processed: ${processedTrackCount}/${this.uiManager.selectedPlaylist.tracks.total})</span>`
           )
 
-          const batchResult = await this._processTrackBatch(
-            currentProcessingBatch,
-            batchNumber
-          )
+          const batchResult = await this._processTrackBatch(currentProcessingBatch, batchNumber)
           allTracksToKeep.push(...batchResult.tracksToKeep)
           totalFilteredOutCount += batchResult.filteredOutCountInBatch
           currentProcessingBatch = []
@@ -176,10 +161,7 @@ class SpotifyPlaylistFilter {
           `<span>🔄 Processing final batch ${batchNumber} of tracks... (Processed: ${processedTrackCount}/${this.uiManager.selectedPlaylist.tracks.total})</span>`
         )
 
-        const batchResult = await this._processTrackBatch(
-          currentProcessingBatch,
-          batchNumber
-        )
+        const batchResult = await this._processTrackBatch(currentProcessingBatch, batchNumber)
         allTracksToKeep.push(...batchResult.tracksToKeep)
         totalFilteredOutCount += batchResult.filteredOutCountInBatch
 
@@ -200,18 +182,12 @@ class SpotifyPlaylistFilter {
           )
 
           if (trackUrisToKeep.length > 0) {
-            await this.spotifyApiService.addTracksToPlaylist(
-              newPlaylist.id,
-              trackUrisToKeep
-            )
+            await this.spotifyApiService.addTracksToPlaylist(newPlaylist.id, trackUrisToKeep)
 
-            const invalidUriCount =
-              allTracksToKeep.length - trackUrisToKeep.length
+            const invalidUriCount = allTracksToKeep.length - trackUrisToKeep.length
             const successMessage = `✅ Filtering complete! New playlist "${newPlaylist.name}" created with ${trackUrisToKeep.length} tracks. ${totalFilteredOutCount} tracks were filtered out.`
             const invalidUriMessage =
-              invalidUriCount > 0
-                ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)`
-                : ''
+              invalidUriCount > 0 ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)` : ''
 
             this.uiManager.showSuccess(
               successMessage +
@@ -219,9 +195,7 @@ class SpotifyPlaylistFilter {
                 ` <a href="${newPlaylist.external_urls.spotify}" target="_blank" class="text-spotify-green hover:underline">Open Playlist</a>`
             )
           } else {
-            this.uiManager.showError(
-              'No valid track URIs found. Unable to create playlist.'
-            )
+            this.uiManager.showError('No valid track URIs found. Unable to create playlist.')
           }
         }
       } else {
@@ -231,9 +205,7 @@ class SpotifyPlaylistFilter {
       }
     } catch (error) {
       console.error('❌ Filtering process failed:', error)
-      this.uiManager.showError(
-        `Filtering process failed: ${error.message || 'An unknown error occurred.'}`
-      )
+      this.uiManager.showError(`Filtering process failed: ${error.message || 'An unknown error occurred.'}`)
     } finally {
       if (startButton) {
         startButton.disabled = false
@@ -242,7 +214,8 @@ class SpotifyPlaylistFilter {
     }
   }
 
-  async * _fetchPlaylistTracksGenerator() {
+  // eslint-disable-next-line generator-star-spacing
+  async *_fetchPlaylistTracksGenerator() {
     if (!this.uiManager.selectedPlaylist || !this.authService.userId) {
       throw new Error('Playlist or User ID not selected for fetching tracks.')
     }
@@ -254,9 +227,7 @@ class SpotifyPlaylistFilter {
     let batchCount = 0
     let totalFetched = 0
 
-    console.log(
-      `📥 Starting to fetch tracks from playlist: ${this.uiManager.selectedPlaylist.name}`
-    )
+    console.log(`📥 Starting to fetch tracks from playlist: ${this.uiManager.selectedPlaylist.name}`)
     this.uiManager.updateResultOutput(
       `<span>🔄 Fetching tracks from "${this.uiManager.selectedPlaylist.name}"...</span>`
     )
@@ -272,12 +243,7 @@ class SpotifyPlaylistFilter {
           fields: 'items(track(name,artists(name),uri,id)),next',
         }
 
-        const response = await this.spotifyApiService._apiRequest(
-          endpoint,
-          'GET',
-          null,
-          params
-        )
+        const response = await this.spotifyApiService._apiRequest(endpoint, 'GET', null, params)
         const items = response.items
 
         if (!items) {
@@ -286,14 +252,10 @@ class SpotifyPlaylistFilter {
           continue
         }
 
-        const validItems = items.filter((trackItem) =>
-          this._isValidSpotifyUri(trackItem.track.uri)
-        )
+        const validItems = items.filter((trackItem) => this._isValidSpotifyUri(trackItem.track.uri))
 
         totalFetched += validItems.length
-        console.log(
-          `✅ Batch ${batchCount}: Got ${validItems.length} valid tracks (total: ${totalFetched})`
-        )
+        console.log(`✅ Batch ${batchCount}: Got ${validItems.length} valid tracks (total: ${totalFetched})`)
 
         this.uiManager.updateResultOutput(
           `<span>🔄 Fetched ${totalFetched} / ${this.uiManager.selectedPlaylist.tracks.total} tracks...</span>`
@@ -306,24 +268,18 @@ class SpotifyPlaylistFilter {
         offset += items.length
         if (!response.next) {
           hasMoreData = false
-          console.log(
-            `🏁 Reached end of playlist - total valid tracks: ${totalFetched}`
-          )
+          console.log(`🏁 Reached end of playlist - total valid tracks: ${totalFetched}`)
         }
       } catch (error) {
         console.error(`❌ Error fetching tracks batch ${batchCount}:`, error)
-        this.uiManager.showError(
-          `Error fetching playlist tracks: ${error.message}`
-        )
+        this.uiManager.showError(`Error fetching playlist tracks: ${error.message}`)
         hasMoreData = false
       }
     }
   }
 
   async _processTrackBatch(trackBatch, batchNumber) {
-    console.log(
-      `🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks with bulk API`
-    )
+    console.log(`🎵 Processing batch ${batchNumber}: ${trackBatch.length} tracks with bulk API`)
 
     try {
       const apiBaseUrl = window.location.origin
@@ -356,9 +312,7 @@ class SpotifyPlaylistFilter {
         const { track, lyrics } = result
 
         if (!lyrics) {
-          console.log(
-            `🚫 Lyrics not found for "${track.song}" by ${track.artist}. Skipping track.`
-          )
+          console.log(`🚫 Lyrics not found for "${track.song}" by ${track.artist}. Skipping track.`)
           filteredOutCountInBatch++
           continue
         }
@@ -367,14 +321,10 @@ class SpotifyPlaylistFilter {
 
         if (this.filterMode === 'exclude') {
           if (isKeywordInLyrics) {
-            console.log(
-              `🚫 EXCLUDE mode: Filtering out "${track.song}" by ${track.artist} (matches keyword).`
-            )
+            console.log(`🚫 EXCLUDE mode: Filtering out "${track.song}" by ${track.artist} (matches keyword).`)
             filteredOutCountInBatch++
           } else {
-            console.log(
-              `✅ EXCLUDE mode: Keeping "${track.song}" by ${track.artist}.`
-            )
+            console.log(`✅ EXCLUDE mode: Keeping "${track.song}" by ${track.artist}.`)
             tracksToKeep.push(track)
           }
         } else if (this.filterMode === 'include') {
@@ -387,9 +337,7 @@ class SpotifyPlaylistFilter {
       }
 
       const processedTrackIds = new Set(bulkResult.data.map((r) => r.track.id))
-      const unprocessedTracks = trackBatch.filter(
-        (track) => !processedTrackIds.has(track.id)
-      )
+      const unprocessedTracks = trackBatch.filter((track) => !processedTrackIds.has(track.id))
       filteredOutCountInBatch += unprocessedTracks.length
 
       console.log(
@@ -397,10 +345,7 @@ class SpotifyPlaylistFilter {
       )
       return { tracksToKeep, filteredOutCountInBatch }
     } catch (error) {
-      console.error(
-        `❌ Bulk processing failed for batch ${batchNumber}:`,
-        error
-      )
+      console.error(`❌ Bulk processing failed for batch ${batchNumber}:`, error)
       throw error
     }
   }
@@ -413,6 +358,42 @@ class SpotifyPlaylistFilter {
       }
     }
     return false
+  }
+
+  _isValidSpotifyUri(uri) {
+    if (!uri || typeof uri !== 'string') {
+      return false
+    }
+
+    // Spotify URIs should start with 'spotify:' and have the format spotify:track:id
+    return uri.startsWith('spotify:track:') && uri.length > 14
+  }
+
+  async _createFilteredPlaylist() {
+    try {
+      const originalPlaylist = this.uiManager.selectedPlaylist
+      const filterModeText = this.filterMode === 'exclude' ? 'Excluded' : 'Included'
+      const keywordsText = this.uiManager.keywords.join(', ')
+
+      const newPlaylistName = `${originalPlaylist.name} - ${filterModeText} (${keywordsText})`
+      const description = `Filtered version of "${originalPlaylist.name}" - ${filterModeText} songs with keywords: ${keywordsText}`
+
+      console.log(`🎵 Creating new playlist: "${newPlaylistName}"`)
+
+      const playlistData = {
+        name: newPlaylistName,
+        description: description,
+        public: false,
+      }
+
+      const newPlaylist = await this.spotifyApiService.createPlaylist(this.authService.userId, playlistData)
+      console.log(`✅ Created new playlist with ID: ${newPlaylist.id}`)
+
+      return newPlaylist
+    } catch (error) {
+      console.error('❌ Failed to create filtered playlist:', error)
+      throw new Error(`Failed to create new playlist: ${error.message}`)
+    }
   }
 }
 

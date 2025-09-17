@@ -42,14 +42,10 @@ class SpotifyApiService {
     } else {
       const trackId = uri.replace('spotify:track:', '')
 
-      console.warn(
-        `  → Track ID "${trackId}" has length ${trackId.length} (expected 22)`
-      )
+      console.warn(`  → Track ID "${trackId}" has length ${trackId.length} (expected 22)`)
 
       // Check for characters outside the expected base62 set
-      const invalidChars = trackId
-        .split('')
-        .filter((c) => !/[A-Za-z0-9]/.test(c))
+      const invalidChars = trackId.split('').filter((c) => !/[A-Za-z0-9]/.test(c))
       if (invalidChars.length > 0) {
         console.warn(`  → Track ID contains invalid characters:`, invalidChars)
       }
@@ -69,32 +65,21 @@ class SpotifyApiService {
 
     const BATCH_SIZE = 100
 
-    console.log(
-      `📦 Adding ${trackUris.length} tracks in batches of ${BATCH_SIZE} to playlist ${playlistId}...`
-    )
-    this.updateResultOutput(
-      `<span>📤 Adding ${trackUris.length} tracks to the new playlist...</span>`
-    )
-
+    console.log(`📦 Adding ${trackUris.length} tracks in batches of ${BATCH_SIZE} to playlist ${playlistId}...`)
+    console.log('Adding tracks to playlist...')
     const apiRequestPromises = []
     for (let i = 0; i < trackUris.length; i += BATCH_SIZE) {
       const batch = trackUris.slice(i, i + BATCH_SIZE)
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1
       const totalBatches = Math.ceil(trackUris.length / BATCH_SIZE)
 
-      console.log(
-        `📤 Sending batch ${batchNumber}/${totalBatches} (${batch.length} tracks)...`
-      )
+      console.log(`📤 Sending batch ${batchNumber}/${totalBatches} (${batch.length} tracks)...`)
 
       this._areTrackUrisValid(BATCH_SIZE, batch)
 
-      const apiResponse = this._apiRequest(
-        '/playlists/' + playlistId + '/tracks',
-        'POST',
-        {
-          uris: batch,
-        }
-      )
+      const apiResponse = this._apiRequest('/playlists/' + playlistId + '/tracks', 'POST', {
+        uris: batch,
+      })
       apiRequestPromises.push(apiResponse)
     }
 
@@ -171,9 +156,7 @@ class SpotifyApiService {
         'Response status text: ' + response.statusText
       )
 
-      throw new Error(
-        `Spotify API Error: ` + `${response.status} - ${response.statusText}`
-      )
+      throw new Error(`Spotify API Error: ` + `${response.status} - ${response.statusText}`)
     }
 
     return response.json()

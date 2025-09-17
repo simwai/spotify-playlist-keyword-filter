@@ -1,149 +1,58 @@
 {
-  
   "name": "spotify-playlist-keyword-filter",
-  
   "version": "0.0.1",
-  
   "description": "Filter Spotify playlists by removing songs with specific keywords in lyrics",
-  
   "main": "index.js",
-  
   "engines": {
-  
-    
-  "node": ">=13.0.0"
-  
+    "node": ">=13.0.0"
   },
-  
-  "dependencies": {
-  
-    
-  "cookie-parser": "^1.4.5",
-  
-    
-  "cors": "^2.8.5",
-  
-    
-  "dotenv": "^16.5.0",
-  
-    
-  "express": "^4.17.1",
-  
-    
-  "fastest-validator": "^1.19.1",
-  
-    
-  "got-cjs": "^12.5.4",
-  
-    
-  "got-scraping": "^3.2.15",
-  
-    
-  "he": "^1.2.0",
-  
-    
-  "querystring": "^0.2.0",
-  
-    
-  "sequelize": "^6.37.7",
-  
-    
-  "sqlite3": "^5.1.7"
-  
-  },
-  
-  "devDependencies": {
-  
-    
-  "@types/jest": "^29.5.14",
-  
-    
-  "eslint": "^7.32.0",
-  
-    
-  "eslint-config-standard": "^16.0.2",
-  
-    
-  "eslint-plugin-json": "^4.0.1",
-  
-    
-  "jest": "^30.0.0",
-  
-    
-  "jest-environment-jsdom": "^30.0.0",
-  
-    
-  "kill-port": "^2.0.1",
-  
-    
-  "nodemon": "^3.1.10",
-  
-    
-  "prettier": "^3.0.0",
-  
-    
-  "prettier-eslint": "^16.4.2",
-  
-    
-  "stylelint": "^13.13.1",
-  
-    
-  "stylelint-config-prettier": "^9.0.5"
-  
-  },
-  
-  "repository": {
-  
-    
-  "type": "git",
-  
-    
-  "url": "git+https://github.com/simwai/spotify-playlist-keyword-filter.git"
-  
-  },
-  
-  "keywords": [
-  
-    
-  "spotify"
-  
-  ],
-  
-  "author": "Simon Waiblinger",
-  
-  "license": "CC BY-NC-SA 4.0",
-  
-  "bugs": {
-  
-    
-  "url": "https://github.com/simwai/spotify-playlist-keyword-filter/issues"
-  
-  },
-  
-  "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
-  
   "scripts": {
-  
-    
-  "dev": "npm run kill && nodemon ./src/index.js --inspect --trace-warnings",
-  
-    
-  "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
-  
-    
-  "build": "npm install",
-  
-    
-  "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
-  
-    
-  "kill": "kill-port 8888",
-  
-    
-  "test": "jest",
-  
-    
-  "test-watch": "jest --watch"
-  
-  }
+    "dev": "npm run kill && nodemon ./src/index.js --inspect --trace-warnings",
+    "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
+    "build": "npm install",
+    "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
+    "kill": "kill-port 8888",
+    "test": "jest",
+    "test-watch": "jest --watch"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.17.1",
+    "fastest-validator": "^1.19.1",
+    "got-cjs": "^12.5.4",
+    "got-scraping": "^3.2.15",
+    "he": "^1.2.0",
+    "querystring": "^0.2.0",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-json": "^4.0.1",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
+    "kill-port": "^2.0.1",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.0.0",
+    "prettier-eslint": "^16.4.2",
+    "stylelint": "^13.13.1",
+    "stylelint-config-prettier": "^9.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simwai/spotify-playlist-keyword-filter.git"
+  },
+  "keywords": [
+    "spotify"
+  ],
+  "author": "Simon Waiblinger",
+  "license": "CC BY-NC-SA 4.0",
+  "bugs": {
+    "url": "https://github.com/simwai/spotify-playlist-keyword-filter/issues"
+  },
+  "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme"
 }

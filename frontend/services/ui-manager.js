@@ -9,13 +9,7 @@ class UiManager {
   }
 
   navigateTo(view, options = {}) {
-    const sections = [
-      'login',
-      'logged-in',
-      'playlist-form',
-      'tag-form',
-      'back-to-playlists-button',
-    ]
+    const sections = ['login', 'logged-in', 'playlist-form', 'tag-form', 'back-to-playlists-button']
 
     for (const sectionId of sections) {
       const element = document.getElementById(sectionId)
@@ -46,9 +40,7 @@ class UiManager {
       case 'tag-form':
         document.getElementById('logged-in').classList.remove('hidden')
         document.getElementById('tag-form').classList.remove('hidden')
-        document
-          .getElementById('back-to-playlists-button')
-          .classList.remove('hidden')
+        document.getElementById('back-to-playlists-button').classList.remove('hidden')
 
         if (options.playlist) {
           const tagTitle = document.querySelector('#tag-form h1')
@@ -106,9 +98,7 @@ class UiManager {
       this.navigateTo('playlist-selection')
 
       if (this.playlists.length === 0) {
-        this.updateResultOutput(
-          '<span>🤔 No playlists found, or unable to load them.</span>'
-        )
+        this.updateResultOutput('<span>🤔 No playlists found, or unable to load them.</span>')
       } else {
         this.updateResultOutput(
           `<span class="pt-8">✅ Loaded ${this.playlists.length} playlists. Select one to continue.</span>`
@@ -142,10 +132,7 @@ class UiManager {
 
       row.className = 'hover:bg-gray-50 cursor-pointer transition-colors'
       const playlistName = playlist.name || 'Unnamed Playlist'
-      const trackTotal =
-        playlist.tracks && typeof playlist.tracks.total === 'number'
-          ? playlist.tracks.total
-          : 'N/A'
+      const trackTotal = playlist.tracks && typeof playlist.tracks.total === 'number' ? playlist.tracks.total : 'N/A'
 
       row.innerHTML = `
         <td class="p-4 border-b border-gray-200">${playlistName}</td>
@@ -158,9 +145,7 @@ class UiManager {
   }
 
   selectPlaylist(playlist, rowElement) {
-    const selectedPlaylistRows = document.querySelectorAll(
-      '#playlists tbody tr.selected'
-    )
+    const selectedPlaylistRows = document.querySelectorAll('#playlists tbody tr.selected')
     for (const activeRow of selectedPlaylistRows) {
       activeRow.classList.remove('selected')
     }
@@ -168,7 +153,7 @@ class UiManager {
     this.selectedPlaylist = playlist
     rowElement.classList.add('selected')
 
-    console.log('Selected playlist:', playlist.name, playlist.id)
+    console.log('Selected playlist:', playlist.name, 'ID:', playlist.id)
 
     this.navigateTo('tag-form', { playlist })
     this.updateResultOutput('')
@@ -268,6 +253,10 @@ class UiManager {
   }
 
   async startFiltering() {
+    console.log('Selected playlist object:', this.uiManager.selectedPlaylist)
+    console.log('Selected playlist name:', this.uiManager.selectedPlaylist?.name)
+    console.log('Selected playlist ID:', this.uiManager.selectedPlaylist?.id)
+    console.log('Selected playlist tracks:', this.uiManager.selectedPlaylist?.tracks)
     if (!this.selectedPlaylist) {
       this.showError('Please select a playlist.')
       return
@@ -313,10 +302,7 @@ class UiManager {
           this.updateResultOutput(
             `<span>🔄 Processing batch ${batchNumber} of tracks for lyrics & filtering... (Processed: ${processedTrackCount}/${this.selectedPlaylist.tracks.total})</span>`
           )
-          const batchResult = await this._processTrackBatch(
-            currentProcessingBatch,
-            batchNumber
-          )
+          const batchResult = await this._processTrackBatch(currentProcessingBatch, batchNumber)
           allTracksToKeep.push(...batchResult.tracksToKeep)
           totalFilteredOutCount += batchResult.filteredOutCountInBatch
           currentProcessingBatch = []
@@ -331,10 +317,7 @@ class UiManager {
         this.updateResultOutput(
           `<span>🔄 Processing final batch ${batchNumber} of tracks... (Processed: ${processedTrackCount}/${this.selectedPlaylist.tracks.total})</span>`
         )
-        const batchResult = await this._processTrackBatch(
-          currentProcessingBatch,
-          batchNumber
-        )
+        const batchResult = await this._processTrackBatch(currentProcessingBatch, batchNumber)
         allTracksToKeep.push(...batchResult.tracksToKeep)
         totalFilteredOutCount += batchResult.filteredOutCountInBatch
         this.updateResultOutput(
@@ -354,17 +337,11 @@ class UiManager {
           )
 
           if (trackUrisToKeep.length > 0) {
-            await this.spotifyApiService.addTracksToSpotifyPlaylist(
-              newPlaylist.id,
-              trackUrisToKeep
-            )
-            const invalidUriCount =
-              allTracksToKeep.length - trackUrisToKeep.length
+            await this.spotifyApiService.addTracksToSpotifyPlaylist(newPlaylist.id, trackUrisToKeep)
+            const invalidUriCount = allTracksToKeep.length - trackUrisToKeep.length
             const successMessage = `✅ Filtering complete! New playlist "${newPlaylist.name}" created with ${trackUrisToKeep.length} tracks. ${totalFilteredOutCount} tracks were filtered out.`
             const invalidUriMessage =
-              invalidUriCount > 0
-                ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)`
-                : ''
+              invalidUriCount > 0 ? ` (${invalidUriCount} tracks had invalid URIs and were skipped)` : ''
 
             this.showSuccess(
               successMessage +
@@ -372,9 +349,7 @@ class UiManager {
                 ` <a href="${newPlaylist.external_urls.spotify}" target="_blank" class="text-spotify-green hover:underline">Open Playlist</a>`
             )
           } else {
-            this.showError(
-              'No valid track URIs found. Unable to create playlist.'
-            )
+            this.showError('No valid track URIs found. Unable to create playlist.')
           }
         }
       } else {
@@ -384,9 +359,7 @@ class UiManager {
       }
     } catch (error) {
       console.error('❌ Filtering process failed:', error)
-      this.showError(
-        `Filtering process failed: ${error.message || 'An unknown error occurred.'}`
-      )
+      this.showError(`Filtering process failed: ${error.message || 'An unknown error occurred.'}`)
     } finally {
       if (startButton) {
         startButton.disabled = false
@@ -409,10 +382,7 @@ class UiManager {
     if (resultOutput) {
       resultOutput.innerHTML = `<div class="w-full p-4 bg-green-100 text-green-800 rounded-lg border border-green-200 mt-4">${message}</div>`
     } else {
-      console.error(
-        'Could not show success, #result-output not found:',
-        message
-      )
+      console.error('Could not show success, #result-output not found:', message)
     }
   }
 
