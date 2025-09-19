@@ -20,11 +20,7 @@ const config = {
     clientSecret: process.env.GENIUS_CLIENT_SECRET,
   },
   cors: {
-    origins: [
-      process.env.CORS_ORIGIN,
-      'http://localhost:8888',
-      'http://127.0.0.1:8888',
-    ],
+    origins: [process.env.CORS_ORIGIN, 'http://localhost:8888', 'http://127.0.0.1:8888'],
   },
 }
 

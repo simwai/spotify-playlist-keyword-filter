@@ -9,11 +9,19 @@ class AuthService {
 
   _loadStoredTokens() {
     try {
+      // First try sessionStorage (short-term login)
       this.accessToken = sessionStorage.getItem('spotify_access_token')
       this.refreshToken = sessionStorage.getItem('spotify_refresh_token')
       this.userId = sessionStorage.getItem('spotify_user_id')
+
+      // If nothing in sessionStorage, fall back to localStorage (persistent login)
+      if (!this.accessToken) {
+        this.accessToken = localStorage.getItem('spotify_access_token')
+        this.refreshToken = localStorage.getItem('spotify_refresh_token')
+        this.userId = localStorage.getItem('spotify_user_id')
+      }
     } catch (error) {
-      console.warn('Could not access sessionStorage for tokens:', error)
+      console.warn('Could not access stored tokens:', error)
     }
   }
 
@@ -56,8 +64,9 @@ class AuthService {
       this.accessToken = hashParams.access_token
       try {
         sessionStorage.setItem('spotify_access_token', this.accessToken)
+        localStorage.setItem('spotify_access_token', this.accessToken)
       } catch (error) {
-        console.warn('Failed to store access_token in sessionStorage', error)
+        console.warn('Failed to store access_token', error)
       }
     }
 
@@ -65,18 +74,19 @@ class AuthService {
       this.refreshToken = hashParams.refresh_token
       try {
         sessionStorage.setItem('spotify_refresh_token', this.refreshToken)
+        localStorage.setItem('spotify_refresh_token', this.refreshToken)
       } catch (error) {
-        console.warn('Failed to store refresh_token in sessionStorage', error)
+        console.warn('Failed to store refresh_token', error)
       }
     }
 
     if (hashParams.uid) {
       this.userId = hashParams.uid
-
       try {
         sessionStorage.setItem('spotify_user_id', this.userId)
+        localStorage.setItem('spotify_user_id', this.userId) // 👈 added
       } catch (error) {
-        console.warn('Failed to store uid in sessionStorage', error)
+        console.warn('Failed to store uid', error)
       }
     }
   }

@@ -131,13 +131,21 @@ class UiManager {
       const row = document.createElement('tr')
 
       row.className = 'hover:bg-gray-50 cursor-pointer transition-colors'
-      const playlistName = playlist.name || 'Unnamed Playlist'
+
+      let playlistName = playlist.name || 'Unnamed Playlist'
+
+      // 👇 detect weird Spotify ID-style names (long, alphanumeric, no spaces)
+      const looksLikeId = /^[A-Za-z0-9]{20,}$/.test(playlistName)
+      if (looksLikeId) {
+        playlistName = 'Untitled Playlist'
+      }
+
       const trackTotal = playlist.tracks && typeof playlist.tracks.total === 'number' ? playlist.tracks.total : 'N/A'
 
       row.innerHTML = `
-        <td class="p-4 border-b border-gray-200">${playlistName}</td>
-        <td class="p-4 border-b border-gray-200" data-sort="${typeof trackTotal === 'number' ? trackTotal : -1}">${trackTotal}</td>
-      `
+      <td class="p-4 border-b border-gray-200">${playlistName}</td>
+      <td class="p-4 border-b border-gray-200" data-sort="${typeof trackTotal === 'number' ? trackTotal : -1}">${trackTotal}</td>
+    `
 
       row.addEventListener('click', () => this.selectPlaylist(playlist, row))
       playlistsTable.appendChild(row)
