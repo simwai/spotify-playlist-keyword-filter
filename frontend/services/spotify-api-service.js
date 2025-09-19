@@ -23,50 +23,24 @@ class SpotifyApiService {
     })
   }
 
-  isValidSpotifyUri(uri) {
-    if (!uri || typeof uri !== 'string') {
-      console.warn('❌ Invalid URI: not a string or null/undefined:', uri)
-      return false
-    }
-
-    const spotifyUriPattern = /^spotify:track:[A-Za-z0-9]{22}$/
-    const isValid = spotifyUriPattern.test(uri)
-
-    if (isValid) {
-      return null
-    }
-
-    console.warn('❌ Invalid Spotify URI format:', uri)
-    if (!uri.startsWith('spotify:track:')) {
-      console.warn('  → URI does not start with "spotify:track:"')
-    } else {
-      const trackId = uri.replace('spotify:track:', '')
-
-      console.warn(`  → Track ID "${trackId}" has length ${trackId.length} (expected 22)`)
-
-      // Check for characters outside the expected base62 set
-      const invalidChars = trackId.split('').filter((c) => !/[A-Za-z0-9]/.test(c))
-      if (invalidChars.length > 0) {
-        console.warn(`  → Track ID contains invalid characters:`, invalidChars)
-      }
-    }
-
-    return null
-  }
-
   async addTracksToPlaylist(playlistId, trackUris) {
+    console.log('trackUrisToKeep:', trackUris)
+    console.log('Is array?', Array.isArray(trackUris))
+
     if (!playlistId) {
-      console.error('No valid playlist ID provided to addTracksToPlaylist()')
+      console.error('❌ No valid playlist ID provided to addTracksToPlaylist()')
+      return
     }
 
-    if (!trackUris) {
-      console.error('No valid tracks provided to addTracksToPlaylist()')
+    if (!trackUris || !Array.isArray(trackUris)) {
+      console.error('❌ No valid tracks provided to addTracksToPlaylist()')
+      return
     }
 
     const BATCH_SIZE = 100
-
     console.log(`📦 Adding ${trackUris.length} tracks in batches of ${BATCH_SIZE} to playlist ${playlistId}...`)
     console.log('Adding tracks to playlist...')
+
     const apiRequestPromises = []
     for (let i = 0; i < trackUris.length; i += BATCH_SIZE) {
       const batch = trackUris.slice(i, i + BATCH_SIZE)
@@ -75,7 +49,10 @@ class SpotifyApiService {
 
       console.log(`📤 Sending batch ${batchNumber}/${totalBatches} (${batch.length} tracks)...`)
 
-      this._areTrackUrisValid(BATCH_SIZE, batch)
+      if (!this._areTrackUrisValid(batch)) {
+        console.error('❌ One or more URIs in this batch are invalid, skipping...')
+        continue
+      }
 
       const apiResponse = this._apiRequest('/playlists/' + playlistId + '/tracks', 'POST', {
         uris: batch,
@@ -84,20 +61,23 @@ class SpotifyApiService {
     }
 
     await Promise.all(apiRequestPromises)
+    console.log('✅ Finished adding tracks to playlist:', playlistId)
 
     return null
   }
 
   _areTrackUrisValid(trackUris) {
-    let areAllUrisValid = false
     for (const uri of trackUris) {
-      if (areAllUrisValid) {
-        break
+      if (!this.isValidSpotifyUri(uri)) {
+        console.warn(`❌ Invalid Spotify URI: ${uri}`)
+        return false
       }
-
-      areAllUrisValid = this.isValidSpotifyUri(uri)
     }
-    return areAllUrisValid
+    return true
+  }
+
+  isValidSpotifyUri(uri) {
+    return typeof uri === 'string' && uri.startsWith('spotify:track:')
   }
 
   async _apiRequest(endpoint, method = 'GET', body = null, params = {}) {
@@ -111,9 +91,7 @@ class SpotifyApiService {
   _buildUrl(endpoint, params) {
     let url = `https://api.spotify.com/v1${endpoint}`
 
-    const areParamsExisting = Object.keys(params).length > 0
-    if (areParamsExisting) {
-      // "key1=value1&key2=value2"
+    if (Object.keys(params).length > 0) {
       const queryString = Object.entries(params)
         .map(([key, value]) => {
           const encodedKey = encodeURIComponent(key)
@@ -146,6 +124,10 @@ class SpotifyApiService {
 
   async _handleResponse(response) {
     if (response.status === 401) {
+      if (typeof uiManager !== 'undefined') {
+        uiManager.showLogin()
+      }
+
       throw new Error('Spotify API Unauthorized')
     }
 
@@ -156,7 +138,7 @@ class SpotifyApiService {
         'Response status text: ' + response.statusText
       )
 
-      throw new Error(`Spotify API Error: ` + `${response.status} - ${response.statusText}`)
+      throw new Error(`Spotify API Error: ${response.status} - ${response.statusText}`)
     }
 
     return response.json()

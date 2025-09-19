@@ -182,6 +182,7 @@ class SpotifyPlaylistFilter {
           )
 
           if (trackUrisToKeep.length > 0) {
+            console.log('👉 trackUrisToKeep', trackUrisToKeep, Array.isArray(trackUrisToKeep))
             await this.spotifyApiService.addTracksToPlaylist(newPlaylist.id, trackUrisToKeep)
 
             const invalidUriCount = allTracksToKeep.length - trackUrisToKeep.length

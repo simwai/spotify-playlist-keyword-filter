@@ -95,6 +95,7 @@ class UiManager {
 
       this.playlists = data.items
       this.renderPlaylists()
+
       this.navigateTo('playlist-selection')
 
       if (this.playlists.length === 0) {
@@ -128,6 +129,9 @@ class UiManager {
     }
 
     for (const playlist of this.playlists) {
+      console.log('Playlist name:', playlist.name, 'tracks:', playlist.tracks)
+
+      console.log('Playlist object:', playlist)
       const row = document.createElement('tr')
 
       row.className = 'hover:bg-gray-50 cursor-pointer transition-colors'
