@@ -7,6 +7,7 @@
     "node": ">=13.0.0"
   },
   "dependencies": {
+    "@simwai/utils": "^2.0.9",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -20,7 +21,6 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@simwai/utils": "^2.0.8",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-json": "^4.0.1",
