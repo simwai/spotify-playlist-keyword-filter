@@ -138,7 +138,6 @@ class UiManager {
 
       let playlistName = playlist.name || 'Unnamed Playlist'
 
-      // 👇 detect weird Spotify ID-style names (long, alphanumeric, no spaces)
       const looksLikeId = /^[A-Za-z0-9]{20,}$/.test(playlistName)
       if (looksLikeId) {
         playlistName = 'Untitled Playlist'

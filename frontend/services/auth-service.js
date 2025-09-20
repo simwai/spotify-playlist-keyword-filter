@@ -9,12 +9,10 @@ class AuthService {
 
   _loadStoredTokens() {
     try {
-      // First try sessionStorage (short-term login)
       this.accessToken = sessionStorage.getItem('spotify_access_token')
       this.refreshToken = sessionStorage.getItem('spotify_refresh_token')
       this.userId = sessionStorage.getItem('spotify_user_id')
 
-      // If nothing in sessionStorage, fall back to localStorage (persistent login)
       if (!this.accessToken) {
         this.accessToken = localStorage.getItem('spotify_access_token')
         this.refreshToken = localStorage.getItem('spotify_refresh_token')
@@ -84,7 +82,7 @@ class AuthService {
       this.userId = hashParams.uid
       try {
         sessionStorage.setItem('spotify_user_id', this.userId)
-        localStorage.setItem('spotify_user_id', this.userId) // 👈 added
+        localStorage.setItem('spotify_user_id', this.userId)
       } catch (error) {
         console.warn('Failed to store uid', error)
       }
