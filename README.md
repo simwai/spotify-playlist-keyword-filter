@@ -125,6 +125,63 @@ The two redirect URLs serve different purposes:
 - `SPOTIFY_REDIRECT_URI`: Where Spotify sends the user back to your server
 - `FRONTEND_URL`: Where your server sends the user back to your frontend
 
+
+## Running With Docker
+
+We recommend usind a Linux VM on Windows 
+
+On Linux
+
+1. Install Docker and Docker Compose
+
+```bash
+
+# Install prerequisites
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+
+# Add Docker's official repository and key
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+# Install Docker Engine and the Compose plugin
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+```
+
+2. Run the Application
+Clone the repository:
+
+``` bash
+
+git clone <repository_url>
+cd <repository_name>
+```
+Set up your credentials:
+```bash
+cp .env.example .env
+```
+
+Now, edit the .env file with your Spotify and Genius API keys.
+
+Launch the application:
+
+```bash
+
+docker compose up --build -d
+```
+
+Open your browser and go to http://localhost:8888.
+
+
+
+
 ## Contributing
 
 1. Fork the repository
