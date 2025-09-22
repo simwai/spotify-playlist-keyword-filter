@@ -128,14 +128,13 @@ The two redirect URLs serve different purposes:
 
 ## Running With Docker
 
-We recommend usind a Linux VM on Windows 
+We recommend using Ubuntu.
 
 On Linux
 
 1. Install Docker and Docker Compose
 
 ```bash
-
 # Install prerequisites
 sudo apt-get update
 sudo apt-get install ca-certificates curl
@@ -152,18 +151,18 @@ sudo apt-get update
 
 # Install Docker Engine and the Compose plugin
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
 ```
 
 2. Run the Application
 Clone the repository:
 
 ``` bash
-
-git clone <repository_url>
-cd <repository_name>
+git clone https://github.com/simwai/spotify-playlist-keyword-filter
+cd ./spotify-playlist-keyword-filter 
 ```
+
 Set up your credentials:
+
 ```bash
 cp .env.example .env
 ```
@@ -173,14 +172,10 @@ Now, edit the .env file with your Spotify and Genius API keys.
 Launch the application:
 
 ```bash
-
 docker compose up --build -d
 ```
 
 Open your browser and go to http://localhost:8888.
-
-
-
 
 ## Contributing
 
