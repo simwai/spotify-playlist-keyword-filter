@@ -1,5 +1,4 @@
 {
-  "path-intellisense.extensionOnImport": true,
   "html.format.wrapLineLength": 200,
   "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
   "editor.formatOnType": false,
