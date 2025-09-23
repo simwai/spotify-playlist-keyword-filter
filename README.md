@@ -1,9 +1,9 @@
 # Spotify Playlist Keyword Filter
 
 A lot of unproductive words are in most of the current songs. If you want to have a clean playlist with none of such words, start using Spotify Playlist Keyword Filter. Maybe you have an addiction or little respect for women then listening to selected music can be benefiting.
-                   
-## Features     
-          
+
+## Features
+
 - Connect to your Spotify account
 - Fetch playlists and track information
 - Search and retrieve song lyrics from Genius API
@@ -11,8 +11,8 @@ A lot of unproductive words are in most of the current songs. If you want to hav
 - Clean playlist management
 - Persistent lyrics caching with SQLite database
 - Modular architecture with proper separation of concerns
-       
-## Prerequisites     
+
+## Prerequisites
 
 - Node.js (Download from [nodejs.org](https://nodejs.org/download/))
 - Spotify Developer Account
@@ -34,7 +34,7 @@ npm install
 Copy the example environment file and configure your credentials:
 
 ```bash
-cp .env.example .env 
+cp .env.example .env
 ```
 
 Update the `.env` file with your actual credentials.
@@ -128,14 +128,13 @@ The two redirect URLs serve different purposes:
 
 ## Running With Docker
 
-We recommend usind a Linux VM on Windows 
+We recommend using Ubuntu.
 
 On Linux
 
 1. Install Docker and Docker Compose
 
 ```bash
-
 # Install prerequisites
 sudo apt-get update
 sudo apt-get install ca-certificates curl
@@ -152,18 +151,18 @@ sudo apt-get update
 
 # Install Docker Engine and the Compose plugin
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
 ```
 
 2. Run the Application
 Clone the repository:
 
 ``` bash
-
-git clone <repository_url>
-cd <repository_name>
+git clone https://github.com/simwai/spotify-playlist-keyword-filter
+cd ./spotify-playlist-keyword-filter 
 ```
+
 Set up your credentials:
+
 ```bash
 cp .env.example .env
 ```
@@ -173,14 +172,10 @@ Now, edit the .env file with your Spotify and Genius API keys.
 Launch the application:
 
 ```bash
-
 docker compose up --build -d
 ```
 
 Open your browser and go to http://localhost:8888.
-
-
-
 
 ## Contributing
 
