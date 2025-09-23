@@ -215,7 +215,6 @@ class SpotifyPlaylistFilter {
     }
   }
 
-  // eslint-disable-next-line generator-star-spacing
   async *_fetchPlaylistTracksGenerator() {
     if (!this.uiManager.selectedPlaylist || !this.authService.userId) {
       throw new Error('Playlist or User ID not selected for fetching tracks.')
