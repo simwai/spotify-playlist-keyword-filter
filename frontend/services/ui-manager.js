@@ -131,7 +131,6 @@ class UiManager {
     for (const playlist of this.playlists) {
       console.log('Playlist name:', playlist.name, 'tracks:', playlist.tracks)
 
-      console.log('Playlist object:', playlist)
       const row = document.createElement('tr')
 
       row.className = 'hover:bg-gray-50 cursor-pointer transition-colors'
@@ -264,10 +263,6 @@ class UiManager {
   }
 
   async startFiltering() {
-    console.log('Selected playlist object:', this.uiManager.selectedPlaylist)
-    console.log('Selected playlist name:', this.uiManager.selectedPlaylist?.name)
-    console.log('Selected playlist ID:', this.uiManager.selectedPlaylist?.id)
-    console.log('Selected playlist tracks:', this.uiManager.selectedPlaylist?.tracks)
     if (!this.selectedPlaylist) {
       this.showError('Please select a playlist.')
       return

@@ -1,6 +1,7 @@
 const path = require('node:path')
 const { Sequelize } = require('sequelize')
-const { ConsoleLogger } = require('../utils/console-logger.js')
+const { ConsoleLogger } = require('@simwai/utils')
+
 const storage = path.join(__dirname, '../../lyrics_cache.db')
 
 const sequelize = new Sequelize({

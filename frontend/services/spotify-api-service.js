@@ -127,7 +127,6 @@ class SpotifyApiService {
       if (typeof uiManager !== 'undefined') {
         uiManager.showLogin()
       }
-
       throw new Error('Spotify API Unauthorized')
     }
 
@@ -137,7 +136,6 @@ class SpotifyApiService {
         'Response status: ' + response.status + '\n',
         'Response status text: ' + response.statusText
       )
-
       throw new Error(`Spotify API Error: ${response.status} - ${response.statusText}`)
     }
 
