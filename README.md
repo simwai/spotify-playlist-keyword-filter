@@ -158,6 +158,10 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 ```bash
 git clone https://github.com/simwai/spotify-playlist-keyword-filter
 cd ./spotify-playlist-keyword-filter
+=======
+``` bash
+git clone https://github.com/simwai/spotify-playlist-keyword-filter
+cd ./spotify-playlist-keyword-filter 
 ```
 
 Set up your credentials:
