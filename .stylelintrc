@@ -9,13 +9,7 @@
     "alpha-value-notation": [
       "percentage",
       {
-        "exceptProperties": [
-          "opacity",
-          "fill-opacity",
-          "flood-opacity",
-          "stop-opacity",
-          "stroke-opacity"
-        ]
+        "exceptProperties": ["opacity", "fill-opacity", "flood-opacity", "stop-opacity", "stroke-opacity"]
       }
     ],
     "at-rule-empty-line-before": [

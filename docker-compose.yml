@@ -2,13 +2,13 @@ services:
   spotify-playlist-keyword-filter:
     build:
       context: .
-      dockerfile: Dockerfile  
-    container_name:  spotify-playlist-keyword-filter 
+      dockerfile: Dockerfile
+    container_name: spotify-playlist-keyword-filter
     ports:
-      - "8888:8888"
+      - '8888:8888'
     env_file:
       - .env
     volumes:
-      - .:/app          
-      - /app/node_modules  
+      - .:/app
+      - /app/node_modules
     command: npm run dev

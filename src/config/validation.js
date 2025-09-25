@@ -22,7 +22,7 @@ const schema = {
 
 function validateConfig() {
   const env = {
-    PORT: Number(process.env.PORT || 3000),
+    PORT: process.env.PORT ? Number(process.env.PORT) : undefined,
     FRONTEND_URL: process.env.FRONTEND_URL,
     GENIUS_APP_URL: process.env.GENIUS_APP_URL,
     GENIUS_CLIENT_ID: process.env.GENIUS_CLIENT_ID,
@@ -33,6 +33,10 @@ function validateConfig() {
     SPOTIFY_REDIRECT_URI: process.env.SPOTIFY_REDIRECT_URI,
     CORS_ORIGIN: process.env.CORS_ORIGIN,
     NODE_ENV: process.env.NODE_ENV,
+  }
+
+  if (!process.env.PORT) {
+    console.warn('⚠️  PORT not set. Please define it in your .env file (e.g. PORT=10001).')
   }
 
   const check = v.compile(schema)

@@ -40,15 +40,9 @@ class SpotifyAuthService {
 
     res.cookie(this.stateKey, state, cookieOptions)
 
-    this.logger.log(
-      '🍪 Set cookie with key:',
-      this.stateKey,
-      'and value:',
-      state
-    )
+    this.logger.log('🍪 Set cookie with key:', this.stateKey, 'and value:', state)
 
-    const scope =
-      'playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative'
+    const scope = 'playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative'
     const redirectUri = config.spotify.redirectUri
 
     const authUrl = `https://accounts.spotify.com/authorize?${stringify({
@@ -137,19 +131,16 @@ class SpotifyAuthService {
     this.logger.log('📝 Request body:', JSON.stringify(requestBody))
 
     try {
-      const response = await this.httpClient.post(
-        'https://accounts.spotify.com/api/token',
-        {
-          body: stringify(requestBody),
-          headers: {
-            Authorization: authHeader,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          timeout: {
-            request: 15000,
-          },
-        }
-      )
+      const response = await this.httpClient.post('https://accounts.spotify.com/api/token', {
+        body: stringify(requestBody),
+        headers: {
+          Authorization: authHeader,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout: {
+          request: 15000,
+        },
+      })
 
       this.logger.log('📊 Token response status:', response.statusCode)
       this.logger.log('🎫 Token response body:', response.body)
@@ -187,10 +178,7 @@ class SpotifyAuthService {
   }
 
   async _fetchUserProfile(accessToken) {
-    this.logger.log(
-      '👤 Fetching user profile with token:',
-      accessToken?.substring(0, 20) + '...'
-    )
+    this.logger.log('👤 Fetching user profile with token:', accessToken?.substring(0, 20) + '...')
 
     try {
       const response = await this.httpClient

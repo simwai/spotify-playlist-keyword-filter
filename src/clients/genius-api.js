@@ -40,13 +40,10 @@ class GeniusApiClient {
   }
 
   async getSong(songId) {
-    const response = await this.httpClient(
-      `https://api.genius.com/songs/${songId}`,
-      {
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-        responseType: 'json',
-      }
-    )
+    const response = await this.httpClient(`https://api.genius.com/songs/${songId}`, {
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      responseType: 'json',
+    })
 
     return response.body.response.song
   }
@@ -61,18 +58,15 @@ class GeniusApiClient {
     const authString = `${this.config.genius.clientId}:${this.config.genius.clientSecret}`
     const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
-    const response = await this.httpClient.post(
-      'https://api.genius.com/oauth/token',
-      {
-        form: {
-          grant_type: 'client_credentials',
-        },
-        headers: {
-          Authorization: authHeader,
-        },
-        responseType: 'json',
-      }
-    )
+    const response = await this.httpClient.post('https://api.genius.com/oauth/token', {
+      form: {
+        grant_type: 'client_credentials',
+      },
+      headers: {
+        Authorization: authHeader,
+      },
+      responseType: 'json',
+    })
 
     this.accessToken = response.body.access_token
     this.tokenExpiry = Date.now() + 50 * 60 * 1000 // 50 minutes
