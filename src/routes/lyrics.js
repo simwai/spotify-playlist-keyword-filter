@@ -27,9 +27,7 @@ module.exports = (container) => {
       }))
 
       const results = []
-      for await (const result of lyricsService.processTracksBatch(
-        trackRequests
-      )) {
+      for await (const result of lyricsService.processTracksBatch(trackRequests)) {
         results.push(result)
       }
 

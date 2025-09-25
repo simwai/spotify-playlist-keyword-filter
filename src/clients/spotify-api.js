@@ -43,12 +43,7 @@ class SpotifyApiClient {
 
   async addTracksToPlaylist(playlistId, trackUris) {
     const body = { uris: trackUris }
-    return this._makeRequest(
-      'POST',
-      `/playlists/${playlistId}/tracks`,
-      null,
-      body
-    )
+    return this._makeRequest('POST', `/playlists/${playlistId}/tracks`, null, body)
   }
 
   async getPlaylist(playlistId, fields = null) {
@@ -56,13 +51,7 @@ class SpotifyApiClient {
     return this._makeRequest('GET', `/playlists/${playlistId}`, params)
   }
 
-  async _makeRequest(
-    method,
-    endpoint,
-    params = null,
-    body = null,
-    retryCount = 0
-  ) {
+  async _makeRequest(method, endpoint, params = null, body = null, retryCount = 0) {
     if (!this.accessToken) {
       throw new Error('No access token available. Please authenticate first.')
     }
@@ -94,9 +83,7 @@ class SpotifyApiClient {
       // Handle rate limiting
       if (error.response?.statusCode === 429) {
         const retryAfter = parseInt(error.response.headers['retry-after']) || 1
-        console.log(
-          `Rate limited. Waiting ${retryAfter} seconds before retry...`
-        )
+        console.log(`Rate limited. Waiting ${retryAfter} seconds before retry...`)
         await this._sleep(retryAfter * 1000)
         return this._makeRequest(method, endpoint, params, body, retryCount + 1)
       }
@@ -105,28 +92,16 @@ class SpotifyApiClient {
       if (error.response?.statusCode === 401 && retryCount === 0) {
         console.log('Access token expired, attempting refresh...')
         if (await this._refreshAccessToken()) {
-          return this._makeRequest(
-            method,
-            endpoint,
-            params,
-            body,
-            retryCount + 1
-          )
+          return this._makeRequest(method, endpoint, params, body, retryCount + 1)
         }
         throw new Error('Authentication failed - please re-authenticate')
       }
 
-      const errorMessage =
-        error.response?.body?.error?.message || error.message || 'Unknown error'
+      const errorMessage = error.response?.body?.error?.message || error.message || 'Unknown error'
 
-      console.error(
-        `Error making ${method} request to ${endpoint}:`,
-        errorMessage
-      )
+      console.error(`Error making ${method} request to ${endpoint}:`, errorMessage)
 
-      throw new Error(
-        `Spotify API Error (${error.response?.statusCode || 'Unknown'}): ${errorMessage}`
-      )
+      throw new Error(`Spotify API Error (${error.response?.statusCode || 'Unknown'}): ${errorMessage}`)
     }
   }
 
@@ -141,19 +116,16 @@ class SpotifyApiClient {
       const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`
 
       // Use the httpClient instead of got directly
-      const response = await this.httpClient.post(
-        'https://accounts.spotify.com/api/token',
-        {
-          form: {
-            grant_type: 'refresh_token',
-            refresh_token: this.refreshToken,
-          },
-          headers: {
-            Authorization: authHeader,
-          },
-          responseType: 'json',
-        }
-      )
+      const response = await this.httpClient.post('https://accounts.spotify.com/api/token', {
+        form: {
+          grant_type: 'refresh_token',
+          refresh_token: this.refreshToken,
+        },
+        headers: {
+          Authorization: authHeader,
+        },
+        responseType: 'json',
+      })
       if (response.body?.access_token) {
         this.accessToken = response.body.access_token
         console.log('Access token refreshed successfully')

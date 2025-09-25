@@ -17,9 +17,7 @@ describe('Core Algorithms - What Actually Matters', () => {
 
     it('should detect keywords case-insensitively', () => {
       const keywords = ['explicit', 'violence']
-      expect(
-        testKeywordMatching('This song has EXPLICIT content', keywords)
-      ).toBe(true)
+      expect(testKeywordMatching('This song has EXPLICIT content', keywords)).toBe(true)
       expect(testKeywordMatching('Clean song about love', keywords)).toBe(false)
       expect(testKeywordMatching('Songs about VIOLENCE', keywords)).toBe(true)
     })
@@ -33,9 +31,7 @@ describe('Core Algorithms - What Actually Matters', () => {
 
     it('should work with multiple keywords', () => {
       const keywords = ['explicit', 'violence', 'profanity']
-      expect(testKeywordMatching('This has violence in it', keywords)).toBe(
-        true
-      )
+      expect(testKeywordMatching('This has violence in it', keywords)).toBe(true)
       expect(testKeywordMatching('Clean family song', keywords)).toBe(false)
       expect(testKeywordMatching('Some profanity here', keywords)).toBe(true)
     })
@@ -58,23 +54,15 @@ describe('Core Algorithms - What Actually Matters', () => {
     }
 
     it('should validate correct Spotify track URIs', () => {
-      expect(testUriValidation('spotify:track:4iV5W9uYEdYUVa79Axb7Rh')).toBe(
-        true
-      )
-      expect(testUriValidation('spotify:track:1234567890123456789012')).toBe(
-        true
-      )
+      expect(testUriValidation('spotify:track:4iV5W9uYEdYUVa79Axb7Rh')).toBe(true)
+      expect(testUriValidation('spotify:track:1234567890123456789012')).toBe(true)
     })
 
     it('should reject malformed URIs that break API calls', () => {
       expect(testUriValidation('invalid-uri')).toBe(false)
       expect(testUriValidation('')).toBe(false)
-      expect(testUriValidation('spotify:album:4iV5W9uYEdYUVa79Axb7Rh')).toBe(
-        false
-      ) // Wrong type
-      expect(testUriValidation('spotify:track:toolong' + 'a'.repeat(50))).toBe(
-        false
-      )
+      expect(testUriValidation('spotify:album:4iV5W9uYEdYUVa79Axb7Rh')).toBe(false) // Wrong type
+      expect(testUriValidation('spotify:track:toolong' + 'a'.repeat(50))).toBe(false)
       expect(testUriValidation('spotify:track:short')).toBe(false)
     })
 
@@ -82,9 +70,7 @@ describe('Core Algorithms - What Actually Matters', () => {
       expect(testUriValidation(null)).toBe(false)
       expect(testUriValidation(undefined)).toBe(false)
       expect(testUriValidation('spotify:track:')).toBe(false) // Missing ID
-      expect(testUriValidation('spotify:track:4iV5W9uYEdYUVa79Axb7R!')).toBe(
-        false
-      ) // Invalid char
+      expect(testUriValidation('spotify:track:4iV5W9uYEdYUVa79Axb7R!')).toBe(false) // Invalid char
     })
   })
 

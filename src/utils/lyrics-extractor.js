@@ -39,10 +39,7 @@ class LyricsExtractor {
 
       if (allLyrics.trim().length > 50) {
         this.logger.log('✅ Successfully extracted lyrics!')
-        this.logger.log(
-          '📄 Lyrics preview:',
-          allLyrics.substring(0, 200) + '...'
-        )
+        this.logger.log('📄 Lyrics preview:', allLyrics.substring(0, 200) + '...')
         return allLyrics.trim()
       }
 
@@ -55,9 +52,7 @@ class LyricsExtractor {
   }
 
   _extractLyricsFromContainer(match) {
-    const contentMatch = match.match(
-      /<div[^>]*data-lyrics-container="true"[^>]*>(.*)<\/div>/s
-    )
+    const contentMatch = match.match(/<div[^>]*data-lyrics-container="true"[^>]*>(.*)<\/div>/s)
 
     if (!contentMatch?.[1]) {
       return null

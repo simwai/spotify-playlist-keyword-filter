@@ -6,13 +6,14 @@
     "node": true
   },
   "extends": [
-    "standard",
-    "eslint:recommended",
-    "plugin:node/recommended",
-    "plugin:import/recommended",
-    "plugin:promise/recommended",
-    "plugin:json/recommended-legacy"
-  ],
+  "standard",
+  "eslint:recommended",
+  "plugin:node/recommended",
+  "plugin:import/recommended",
+  "plugin:promise/recommended",
+  "plugin:json/recommended-legacy",
+  "prettier"
+],
   "parserOptions": {
     "ecmaVersion": 2020
   },

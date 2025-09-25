@@ -12,10 +12,7 @@ class SpotifyRoutes {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = this.container.spotifyClient(
-        access_token,
-        refresh_token
-      )
+      const spotifyClient = this.container.spotifyClient(access_token, refresh_token)
       const profile = await spotifyClient.getUserProfile()
 
       res.json(profile)
@@ -32,14 +29,8 @@ class SpotifyRoutes {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = this.container.spotifyClient(
-        access_token,
-        refresh_token
-      )
-      const playlists = await spotifyClient.getUserPlaylists(
-        parseInt(limit),
-        parseInt(offset)
-      )
+      const spotifyClient = this.container.spotifyClient(access_token, refresh_token)
+      const playlists = await spotifyClient.getUserPlaylists(parseInt(limit), parseInt(offset))
 
       res.json(playlists)
     } catch (error) {
@@ -50,29 +41,15 @@ class SpotifyRoutes {
 
   async getPlaylistTracks(req, res) {
     try {
-      const {
-        access_token,
-        refresh_token,
-        limit = 50,
-        offset = 0,
-        fields,
-      } = req.query
+      const { access_token, refresh_token, limit = 50, offset = 0, fields } = req.query
       const { id } = req.params
 
       if (!access_token) {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = this.container.spotifyClient(
-        access_token,
-        refresh_token
-      )
-      const tracks = await spotifyClient.getPlaylistTracks(
-        id,
-        parseInt(limit),
-        parseInt(offset),
-        fields
-      )
+      const spotifyClient = this.container.spotifyClient(access_token, refresh_token)
+      const tracks = await spotifyClient.getPlaylistTracks(id, parseInt(limit), parseInt(offset), fields)
 
       res.json(tracks)
     } catch (error) {
@@ -90,16 +67,8 @@ class SpotifyRoutes {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = this.container.spotifyClient(
-        access_token,
-        refresh_token
-      )
-      const playlist = await spotifyClient.createPlaylist(
-        userId,
-        name,
-        description,
-        isPublic
-      )
+      const spotifyClient = this.container.spotifyClient(access_token, refresh_token)
+      const playlist = await spotifyClient.createPlaylist(userId, name, description, isPublic)
 
       res.json(playlist)
     } catch (error) {
@@ -118,10 +87,7 @@ class SpotifyRoutes {
         return res.status(400).json({ error: 'Access token required' })
       }
 
-      const spotifyClient = this.container.spotifyClient(
-        access_token,
-        refresh_token
-      )
+      const spotifyClient = this.container.spotifyClient(access_token, refresh_token)
       const result = await spotifyClient.addTracksToPlaylist(id, uris)
 
       res.json(result)

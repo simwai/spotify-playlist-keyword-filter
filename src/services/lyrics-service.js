@@ -27,14 +27,12 @@ class LyricsService {
     this.lyricsModel = lyricsModel
   }
 
-  async * processTracksBatch(tracks) {
+  async *processTracksBatch(tracks) {
     const BATCH_SIZE = 10
 
     for (let i = 0; i < tracks.length; i += BATCH_SIZE) {
       const batch = tracks.slice(i, i + BATCH_SIZE)
-      const results = await Promise.allSettled(
-        batch.map((track) => this._processTrack(track))
-      )
+      const results = await Promise.allSettled(batch.map((track) => this._processTrack(track)))
 
       for (const result of results) {
         if (result.status === 'fulfilled' && result.value) {
@@ -70,12 +68,7 @@ class LyricsService {
 
     // If not in cache, search with Genius API
     this.logger.log(`🔍 Searching Genius for: ${artist} - ${song}`)
-    const queries = [
-      `${song} ${artist}`,
-      `${song.replace(/\s*\([^)]*\)/g, '')} ${artist}`,
-      `${artist} ${song}`,
-      song,
-    ]
+    const queries = [`${song} ${artist}`, `${song.replace(/\s*\([^)]*\)/g, '')} ${artist}`, `${artist} ${song}`, song]
 
     for (const query of queries) {
       const result = await this.geniusClient.search(query)
@@ -126,17 +119,13 @@ class LyricsService {
       })
 
       if (cachedEntry?.lyrics) {
-        this.logger.log(
-          `📦 Cache hit for lyrics: ${track.artist} - ${track.song}`
-        )
+        this.logger.log(`📦 Cache hit for lyrics: ${track.artist} - ${track.song}`)
         return { track, lyrics: cachedEntry.lyrics }
       }
 
       // If we have a cache entry but no lyrics, it means we previously couldn't find lyrics
       if (cachedEntry && cachedEntry.lyrics === null) {
-        this.logger.log(
-          `📦 Cache hit (no lyrics): ${track.artist} - ${track.song}`
-        )
+        this.logger.log(`📦 Cache hit (no lyrics): ${track.artist} - ${track.song}`)
         return null
       }
     } catch (error) {
@@ -144,9 +133,7 @@ class LyricsService {
     }
 
     // Not in cache, proceed with normal search and fetch
-    this.logger.log(
-      `🔍 Fetching fresh lyrics for: ${track.artist} - ${track.song}`
-    )
+    this.logger.log(`🔍 Fetching fresh lyrics for: ${track.artist} - ${track.song}`)
     const searchResult = await this.searchSong(track.artist, track.song)
     if (!searchResult?.songId) {
       return null
