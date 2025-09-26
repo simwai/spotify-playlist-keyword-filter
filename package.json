@@ -15,7 +15,7 @@
     "got-cjs": "^12.5.4",
     "got-scraping": "^3.2.15",
     "he": "^1.2.0",
-    "querystring": "^0.2.0",
+    "querystring": "^0.2.1",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7"
   },
