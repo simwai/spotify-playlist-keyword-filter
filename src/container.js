@@ -1,6 +1,5 @@
 const he = require('he')
-const { ConsoleLogger } = require('@simwai/utils/build/node/index.cjs')
-
+const { ConsoleLogger } = require('@simwai/utils')
 const { LyricsService } = require('./services/lyrics-service.js')
 const { GeniusApiClient } = require('./clients/genius-api.js')
 const { LyricsExtractor } = require('./utils/lyrics-extractor.js')
