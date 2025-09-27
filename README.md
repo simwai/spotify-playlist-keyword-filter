@@ -125,6 +125,7 @@ The two redirect URLs serve different purposes:
 - `SPOTIFY_REDIRECT_URI`: Where Spotify sends the user back to your server
 - `FRONTEND_URL`: Where your server sends the user back to your frontend
 
+
 ## Running With Docker
 
 We recommend using Ubuntu.
@@ -153,12 +154,9 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 ```
 
 2. Run the Application
-   Clone the repository:
 
-```bash
-git clone https://github.com/simwai/spotify-playlist-keyword-filter
-cd ./spotify-playlist-keyword-filter
-=======
+Clone the repository:
+
 ``` bash
 git clone https://github.com/simwai/spotify-playlist-keyword-filter
 cd ./spotify-playlist-keyword-filter 

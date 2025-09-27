@@ -6,17 +6,7 @@
   "engines": {
     "node": ">=13.0.0"
   },
-  "scripts": {
-    "dev": "npm run kill && nodemon ./src/index.js --inspect --trace-warnings",
-    "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
-    "build": "npm install",
-    "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
-    "kill": "kill-port 8888",
-    "test": "jest",
-    "test-watch": "jest --watch"
-  },
   "dependencies": {
-    "@simwai/utils": "^2.0.12",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -30,16 +20,16 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "jest-environment-jsdom": "^30.0.0",
+    "@simwai/utils": "^2.0.13",
     "@types/jest": "^29.5.14",
     "eslint": "^7.32.0",
-    "eslint-config-prettier": "^10.1.8",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-json": "^4.0.1",
     "jest": "^30.0.0",
-    "jest-environment-jsdom": "^30.0.0",
     "kill-port": "^2.0.1",
     "nodemon": "^3.1.10",
-    "prettier": "^3.0.0",
+    "prettier": "^3.6.2",
     "prettier-eslint": "^16.4.2",
     "stylelint": "^13.13.1",
     "stylelint-config-prettier": "^9.0.5"
@@ -56,5 +46,14 @@
   "bugs": {
     "url": "https://github.com/simwai/spotify-playlist-keyword-filter/issues"
   },
-  "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme"
+  "homepage": "https://github.com/simwai/spotify-playlist-keyword-filter#readme",
+  "scripts": {
+    "dev": "npm run kill && nodemon ./src/index.js --inspect --trace-warnings",
+    "deploy": "npm run kill && npx pm2 start ecosystem.config.js",
+    "build": "npm install",
+    "format": "eslint . --fix --ext .json,.js && prettier . --write && stylelint ./frontend/**/*.css --fix",
+    "kill": "kill-port 8888",
+    "test": "jest",
+    "test-watch": "jest --watch"
+  }
 }
