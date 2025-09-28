@@ -35,6 +35,26 @@ Copy the example environment file and configure your credentials:
 
 ```bash
 cp .env.example .env
+
+Then open the .env file and set the following values:
+
+# Spotify API credentials
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
+
+# Genius API credentials
+GENIUS_CLIENT_ID=your_genius_client_id
+GENIUS_CLIENT_SECRET=your_genius_client_secret
+GENIUS_ACCESS_TOKEN=your_genius_access_token
+
+# Application settings
+PORT=8888
+FRONTEND_URL=http://localhost:8888
+
+
+```bash
+cp .env.example .env
 ```
 
 Update the `.env` file with your actual credentials.
