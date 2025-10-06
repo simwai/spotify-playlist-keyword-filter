@@ -9,7 +9,7 @@
   "dependencies": {
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.3",
     "express": "^4.17.1",
     "fastest-validator": "^1.19.1",
     "got-cjs": "^12.5.4",
